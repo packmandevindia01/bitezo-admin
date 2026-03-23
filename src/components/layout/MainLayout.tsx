@@ -1,105 +1,52 @@
-import { useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard,
-  BarChart3,
-  Package,
-  Settings,
-  X,
-} from "lucide-react";
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
+import Sidebar from "./Sidebar";
+import Topbar from "./Topbar";
 
-import SidebarItem from "./SidebarItem";
-import SidebarDropdown from "./SidebarDropdown";
+const MainLayout = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-interface Props {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const Sidebar = ({ isOpen, onClose }: Props) => {
-  const navigate = useNavigate();
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   return (
+    <div className="flex h-screen overflow-hidden">
+
+  {/* Sidebar */}
+  <div
+    className={`fixed md:static z-40 inset-y-0 left-0 transform 
+    ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+    md:translate-x-0 transition-transform duration-300`}
+  >
+    <Sidebar 
+  isOpen={sidebarOpen} 
+  onClose={() => setSidebarOpen(false)} 
+/>
+  </div>
+
+  {/* Overlay */}
+  {sidebarOpen && (
     <div
-      className={`
-        fixed md:static top-0 left-0 h-full w-64
-        bg-white flex flex-col z-50
-        border-r border-gray-200
-        transform
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0
-        transition-transform duration-300 ease-in-out
-      `}
-    >
-      {/* CLOSE BUTTON (MOBILE) */}
-      <div className="md:hidden flex justify-end p-4">
-        <X size={20} onClick={onClose} className="cursor-pointer" />
-      </div>
+      className="fixed inset-0 bg-black/30 md:hidden"
+      onClick={() => setSidebarOpen(false)}
+    />
+  )}
 
-      {/* LOGO */}
-      <div className="h-16 md:h-20 flex items-center px-4 font-bold text-xl border-b border-gray-200 text-[#49293e]">
-        Bitezo
-      </div>
+  {/* RIGHT SIDE */}
+  <div className="flex flex-col flex-1 min-w-0">
 
-      {/* MENU */}
-      <div className="flex flex-col text-sm md:text-base flex-1 overflow-y-auto py-2">
+    {/* ✅ FIX: REMOVE background from parent */}
+    <Topbar toggleSidebar={toggleSidebar} />
 
-        {/* Dashboard */}
-        <SidebarItem
-          icon={<LayoutDashboard size={18} />}
-          label="Dashboard"
-          onClick={() => {
-            navigate("/dashboard");
-            onClose();
-          }}
-        />
+    {/* ✅ Apply background ONLY here */}
+    <main className="flex-1 p-4 md:p-6 bg-gray-50 overflow-y-auto">
+      <Outlet />
+    </main>
 
-        {/* Master */}
-        <SidebarDropdown icon={<Package size={18} />} label="Master">
-          <div
-            onClick={() => {
-              navigate("/dashboard/users");
-              onClose();
-            }}
-            className="px-4 py-2 rounded-md hover:bg-gray-100 hover:text-[#49293e] transition cursor-pointer"
-          >
-            User
-          </div>
-
-          <div
-            onClick={() => {
-              navigate("/dashboard/customers");
-              onClose();
-            }}
-            className="px-4 py-2 rounded-md hover:bg-gray-100 hover:text-[#49293e] transition cursor-pointer"
-          >
-            Customer
-          </div>
-        </SidebarDropdown>
-
-        {/* Reports */}
-        <SidebarDropdown icon={<BarChart3 size={18} />} label="Reports">
-          <div className="px-6 py-2 hover:text-[#49293e] cursor-pointer text-sm">
-            Sales Report
-          </div>
-
-          <div className="px-6 py-2 hover:text-[#49293e] cursor-pointer text-sm">
-            Stock Report
-          </div>
-        </SidebarDropdown>
-
-        {/* Settings */}
-        <SidebarItem
-          icon={<Settings size={18} />}
-          label="Settings"
-          onClick={() => {
-            navigate("/dashboard/settings");
-            onClose();
-          }}
-        />
-
-      </div>
-    </div>
+  </div>
+</div>
   );
 };
 
-export default Sidebar;
+export default MainLayout;

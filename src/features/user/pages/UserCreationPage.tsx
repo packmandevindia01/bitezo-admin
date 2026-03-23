@@ -1,6 +1,9 @@
 import UserForm from "../components/UserForm";
 
 const UserCreationPage = () => {
+   const handleSubmit = (data: any) => {
+    console.log("User created:", data);
+  };
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-6">
 
@@ -13,7 +16,7 @@ const UserCreationPage = () => {
         </h1>
 
         {/* FORM */}
-        <UserForm />
+        <UserForm onSubmit={handleSubmit} />
 
       </div>
     </div>

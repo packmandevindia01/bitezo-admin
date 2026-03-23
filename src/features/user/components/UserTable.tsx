@@ -1,36 +1,25 @@
-import { useNavigate } from "react-router-dom";
 import { Table, Button, StatusBadge } from "../../../components/common";
 import type { Column } from "../../../components/common/Table";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  branch: string;
-  active: boolean;
-  isMaster: boolean;
-}
+import type { User } from "../types";
 
 interface Props {
   users: User[];
+  onEdit: (user: User) => void;
+  onDelete: (id: number) => void;
+  onAdd: () => void;
 }
 
-const UserTable = ({ users }: Props) => {
-  const navigate = useNavigate();
-
+const UserTable = ({ users, onEdit, onDelete, onAdd }: Props) => {
   const columns: Column<User>[] = [
     { header: "#", accessor: "id" },
-
     { header: "User Name", accessor: "name" },
-
     { header: "Email", accessor: "email" },
-
     { header: "Branch", accessor: "branch" },
 
     {
       header: "Status",
       accessor: "active",
-      render: (row: User) => (
+      render: (row) => (
         <StatusBadge status={row.active ? "active" : "inactive"} />
       ),
     },
@@ -38,22 +27,25 @@ const UserTable = ({ users }: Props) => {
     {
       header: "Master",
       accessor: "isMaster",
-      render: (row: User) => (
-        <span className="text-xs sm:text-sm">
-          {row.isMaster ? "Yes" : "No"}
-        </span>
+      render: (row) => (
+        <span>{row.isMaster ? "Yes" : "No"}</span>
       ),
     },
 
     {
       header: "Actions",
       accessor: "id",
-      render: () => (
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button size="sm" variant="secondary" fullWidth>
+      render: (row) => (
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => onEdit(row)}>
             Edit
           </Button>
-          <Button size="sm" variant="danger" fullWidth>
+
+          <Button
+            size="sm"
+            variant="danger"
+            onClick={() => onDelete(row.id)}
+          >
             Delete
           </Button>
         </div>
@@ -62,25 +54,16 @@ const UserTable = ({ users }: Props) => {
   ];
 
   return (
-    <div className="bg-white p-4 sm:p-5 rounded-xl shadow-md">
+    <div className="bg-white p-4 rounded-xl shadow-md">
 
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+      <div className="flex justify-between mb-4">
+        <h2 className="font-semibold">Users</h2>
 
-        <h2 className="text-base sm:text-lg font-semibold">
-          Users List
-        </h2>
-
-        <Button
-          onClick={() => navigate("/dashboard/user/create")}
-          className="w-full sm:w-auto"
-        >
-          + Create User
+        <Button onClick={onAdd}>
+          + Add User
         </Button>
-
       </div>
 
-      {/* TABLE */}
       <Table columns={columns} data={users} />
 
     </div>

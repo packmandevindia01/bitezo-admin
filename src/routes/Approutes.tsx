@@ -3,12 +3,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "../features/auth/pages/LoginPage";
 import MainLayout from "../components/layout/MainLayout";
 
-import UserTable from "../features/user/components/UserTable";
+
 import CompanyRegistrationPage from "../features/company/pages/CompanyRegistrationPage";
 import UserCreationPage from "../features/user/pages/UserCreationPage"; // ✅ FIXED
 import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage";
 import VerifyOtpPage from "../features/auth/pages/VerifyOtpPage";
 import ResetPasswordPage from "../features/auth/pages/ResetPasswordPage";
+import UserList from "../features/user/pages/UserList";
+
 
 const AppRoutes = () => {
   return (
@@ -25,7 +27,7 @@ const AppRoutes = () => {
           <Route index element={<CompanyRegistrationPage />} />
 
           {/* USER */}
-          <Route path="users" element={<UserTable users={[]} />} />
+          <Route path="users" element={<UserList />} />
           <Route path="user/create" element={<UserCreationPage />} />
           
 
