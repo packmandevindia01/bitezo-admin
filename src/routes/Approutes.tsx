@@ -4,7 +4,7 @@ import LoginPage from "../features/auth/pages/LoginPage";
 import MainLayout from "../components/layout/MainLayout";
 
 
-import CompanyRegistrationPage from "../features/company/pages/CompanyRegistrationPage";
+import CompanyRegistrationPage from "../features/customer/pages/CustomerRegistrationPage";
 import UserCreationPage from "../features/user/pages/UserCreationPage"; // ✅ FIXED
 import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage";
 import VerifyOtpPage from "../features/auth/pages/VerifyOtpPage";
@@ -26,7 +26,7 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<MainLayout />}>
 
             <Route index element={<DashboardPage />} />
-            <Route path="create-company" element={<CompanyRegistrationPage />} />
+            <Route path="create-customer" element={<CompanyRegistrationPage />} />
 
             <Route path="users" element={<UserList />} />
             <Route path="user/create" element={<UserCreationPage />} />

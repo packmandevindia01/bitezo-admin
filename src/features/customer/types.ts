@@ -1,4 +1,4 @@
-export interface CompanyFormData {
+export interface CustomerFormData {
   custName: string;
   custMob: string;
   custMob2?: string;

@@ -1,6 +1,6 @@
-import CompanyForm from "../components/CompanyForm";
+import CustomerForm from "../components/CustomerForm";
 
-const CompanyRegistrationPage = () => {
+const CustomerRegistrationPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-6">
 
@@ -10,11 +10,11 @@ const CompanyRegistrationPage = () => {
           CUSTOMER REGISTRATION
         </h1>
 
-        <CompanyForm />
+        <CustomerForm />
 
       </div>
     </div>
   );
 };
 
-export default CompanyRegistrationPage;
+export default CustomerRegistrationPage;

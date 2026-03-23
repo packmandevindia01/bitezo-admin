@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { FormInput, Button, SelectInput } from "../../../components/common";
-import { createCustomer } from "../services/companyApi";
-import type { CompanyFormData } from "../types";
+import { createCustomer } from "../services/customerApi";
+import type { CustomerFormData } from "../types";
 import { isRequired, isValidMobile, isNumber } from "../../../utils/validators";
 import { useToast } from "../../../context/ToastContext";
 
-const initialState: CompanyFormData = {
+const initialState: CustomerFormData = {
   custName: "",
   custMob: "",
   custMob2: "",
@@ -21,19 +21,19 @@ const initialState: CompanyFormData = {
   database: "",
 };
 
-const CompanyForm = () => {
+const CustomerForm = () => {
   const { showToast } = useToast();
 
-  const [form, setForm] = useState<CompanyFormData>({
+  const [form, setForm] = useState<CustomerFormData>({
     ...initialState,
     startDate: new Date().toISOString(),
   });
 
   const [errors, setErrors] = useState<
-    Partial<Record<keyof CompanyFormData, string>>
+    Partial<Record<keyof CustomerFormData, string>>
   >({});
 
-  const handleChange = (key: keyof CompanyFormData, value: any) => {
+  const handleChange = (key: keyof CustomerFormData, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
 
     // clear error
@@ -205,4 +205,4 @@ const CompanyForm = () => {
   );
 };
 
-export default CompanyForm;
+export default CustomerForm;
