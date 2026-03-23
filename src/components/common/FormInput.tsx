@@ -64,7 +64,7 @@ const FormInput = ({
           ${error ? "border-red-500" : "border-gray-300"}
           ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
 
-          focus:ring-2 focus:ring-[#49293e] focus:border-[#49293e]
+          focus: focus:border-[#49293e]
         `}
       />
 

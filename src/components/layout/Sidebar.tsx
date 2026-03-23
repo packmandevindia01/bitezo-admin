@@ -53,6 +53,22 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
           }}
         />
 
+         <SidebarDropdown icon={<Package size={18} />} label="Customer">
+          <div
+            onClick={() => {
+              navigate("/dashboard/create-company");
+              onClose();
+            }}
+            className="px-4 py-2 rounded-md hover:bg-gray-100 hover:text-[#49293e] transition cursor-pointer"
+          >
+            Registration
+          </div>
+
+          
+        </SidebarDropdown>
+
+        
+
         {/* Master */}
         <SidebarDropdown icon={<Package size={18} />} label="Master">
           <div

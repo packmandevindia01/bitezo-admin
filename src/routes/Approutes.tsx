@@ -10,6 +10,8 @@ import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage";
 import VerifyOtpPage from "../features/auth/pages/VerifyOtpPage";
 import ResetPasswordPage from "../features/auth/pages/ResetPasswordPage";
 import UserList from "../features/user/pages/UserList";
+/* import ProtectedRoute from "./ProtectedRoute"; */
+import DashboardPage from "../features/dashboard/pages/DashboardPage";
 
 
 const AppRoutes = () => {
@@ -20,18 +22,17 @@ const AppRoutes = () => {
         {/* LOGIN */}
         <Route path="/" element={<LoginPage />} />
 
-        {/* DASHBOARD */}
-        <Route path="/dashboard" element={<MainLayout />}>
+        {/* <Route element={<ProtectedRoute />}> */}
+          <Route path="/dashboard" element={<MainLayout />}>
 
-          {/* Default */}
-          <Route index element={<CompanyRegistrationPage />} />
+            <Route index element={<DashboardPage />} />
+            <Route path="create-company" element={<CompanyRegistrationPage />} />
 
-          {/* USER */}
-          <Route path="users" element={<UserList />} />
-          <Route path="user/create" element={<UserCreationPage />} />
-          
+            <Route path="users" element={<UserList />} />
+            <Route path="user/create" element={<UserCreationPage />} />
 
-        </Route>
+          </Route>
+        {/* </Route> */}
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/verify-otp" element={<VerifyOtpPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />

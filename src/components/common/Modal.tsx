@@ -7,6 +7,8 @@ interface ModalProps {
   title?: string;
   children: React.ReactNode;
   size?: "sm" | "md" | "lg";
+  showClose?: boolean;
+  footer?: React.ReactNode;
 }
 
 const Modal = ({
@@ -15,20 +17,26 @@ const Modal = ({
   title,
   children,
   size = "md",
+  showClose = true,
+  footer,
 }: ModalProps) => {
 
-  // ESC key close
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
+  // 🔥 ESC + Scroll lock
+useEffect(() => {
+  const handleEsc = (e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+  };
 
-    if (isOpen) {
-      window.addEventListener("keydown", handleEsc);
-    }
+  if (isOpen) {
+    window.addEventListener("keydown", handleEsc);
+    document.body.style.overflow = "hidden";
+  }
 
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [isOpen, onClose]);
+  return () => {
+    window.removeEventListener("keydown", handleEsc);
+    document.body.style.overflow = "auto";
+  };
+}, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -43,8 +51,8 @@ const Modal = ({
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="modal-title"
     >
-
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -58,29 +66,41 @@ const Modal = ({
           bg-white rounded-xl shadow-lg p-6 z-10
           animate-[fadeIn_0.2s_ease-in-out]
         `}
-        onClick={(e) => e.stopPropagation()} // prevent close inside click
+        onClick={(e) => e.stopPropagation()}
       >
 
-        {/* Header */}
+        {/* HEADER */}
         <div className="flex justify-between items-center mb-4">
           {title && (
-            <h2 className="text-base md:text-lg font-semibold">
+            <h2
+              id="modal-title"
+              className="text-base md:text-lg font-semibold"
+            >
               {title}
             </h2>
           )}
 
-          <button
-            onClick={onClose}
-            className="p-1 rounded hover:bg-gray-100"
-          >
-            <X size={18} />
-          </button>
+          {showClose && (
+            <button
+              onClick={onClose}
+              className="p-1 rounded hover:bg-gray-100 transition"
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
 
-        {/* Content */}
+        {/* CONTENT */}
         <div className="text-sm md:text-base">
           {children}
         </div>
+
+        {/* FOOTER */}
+        {footer && (
+          <div className="mt-6 flex justify-end gap-3">
+            {footer}
+          </div>
+        )}
 
       </div>
     </div>

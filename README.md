@@ -130,7 +130,7 @@ src/
 │   │   ├── pages/
 │   │   │   CompanyRegistration.tsx
 │   │   ├── components/
-│   │   │   CompanyForm.tsx      # 🔥 move form here
+│   │   │   CompanyForm.tsx     
 │   │   ├── services/
 │   │   │   companyApi.ts
 │   │   └── types.ts
