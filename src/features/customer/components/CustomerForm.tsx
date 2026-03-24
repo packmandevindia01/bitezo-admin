@@ -19,6 +19,7 @@ const initialState: CustomerFormData = {
   startDate: "",
   isDemo: true,
   database: "",
+  conMode:"",
 };
 
 const CustomerForm = () => {
@@ -103,7 +104,7 @@ const CustomerForm = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <FormInput
-          label="Company Name"
+          label="Cusomer Name"
           required
           value={form.custName}
           onChange={(e) => handleChange("custName", e.target.value)}
@@ -111,7 +112,7 @@ const CustomerForm = () => {
         />
 
         <FormInput
-          label="Customer ID"
+          label="Registration ID"
           required
           value={form.regId}
           onChange={(e) => handleChange("regId", e.target.value)}
@@ -179,14 +180,23 @@ const CustomerForm = () => {
           onChange={(e) => handleChange("building", e.target.value)}
         />
 
-        <SelectInput
+        <FormInput
           label="Database"
           required
           value={form.database}
           onChange={(e) => handleChange("database", e.target.value)}
+          
+        />
+
+        <SelectInput
+          label="Connection Mode"
+          required
+          value={form.conMode}
+          onChange={(e) => handleChange("conMode", e.target.value)}
           options={[
-            { label: "MySQL", value: "MySQL" },
-            { label: "MongoDB", value: "MongoDB" },
+            { label: "Online", value: "online" },
+            { label: "Offline", value: "ofline" },
+           
           ]}
         />
 

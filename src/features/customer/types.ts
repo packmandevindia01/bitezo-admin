@@ -12,4 +12,5 @@ export interface CustomerFormData {
   startDate: string;
   isDemo: boolean;
   database: string;
+  conMode:string;
 }
