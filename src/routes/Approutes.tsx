@@ -5,13 +5,14 @@ import MainLayout from "../components/layout/MainLayout";
 
 
 import CompanyRegistrationPage from "../features/customer/pages/CustomerRegistrationPage";
-import UserCreationPage from "../features/user/pages/UserCreationPage"; // ✅ FIXED
+import UserCreationPage from "../features/user/pages/UserCreationPage"; 
 import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage";
 import VerifyOtpPage from "../features/auth/pages/VerifyOtpPage";
 import ResetPasswordPage from "../features/auth/pages/ResetPasswordPage";
 import UserList from "../features/user/pages/UserList";
 /* import ProtectedRoute from "./ProtectedRoute"; */
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
+import CustomerList from "../features/customer/pages/CustomerListPage";
 
 
 const AppRoutes = () => {
@@ -26,7 +27,8 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<MainLayout />}>
 
             <Route index element={<DashboardPage />} />
-            <Route path="create-customer" element={<CompanyRegistrationPage />} />
+            <Route path="customers" element={<CustomerList />} />
+            <Route path="customers/create" element={<CompanyRegistrationPage />} />
 
             <Route path="users" element={<UserList />} />
             <Route path="user/create" element={<UserCreationPage />} />

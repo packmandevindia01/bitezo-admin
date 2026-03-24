@@ -74,13 +74,12 @@ export default defineConfig([
 
 src/
 │
-├── app/                         # App-level setup
+├── app/                         
 │   ├── store.ts
 │   ├── hooks.ts
 │
-├── assets/                      # images, icons, logos
-│
-├── components/                  # reusable UI (global)
+├── assets/                    
+├── components/                 
 │   ├── common/
 │   │   FormInput.tsx
 │   │   SelectInput.tsx
@@ -90,10 +89,11 @@ src/
 │   │   StatusBadge.tsx
 │   │   Modal.tsx
 │   │   Loader.tsx
+|   |   
 │   │   EmptyState.tsx
 │   │   Pagination.tsx
 │   │   SearchBar.tsx
-│   │
+│   │   index.ts,
 │   ├── layout/
 │   │   Sidebar.tsx
 │   │   SidebarItem.tsx
@@ -102,9 +102,9 @@ src/
 │   │   Navbar.tsx
 │   │   MainLayout.tsx
 │
-├── features/                    # 🔥 DOMAIN-BASED STRUCTURE
+├── features/                    
 │
-│   ├── auth/                   # 🔐 AUTH MODULE
+│   ├── auth/                   
 │   │   ├── pages/
 │   │   │   LoginPage.tsx
 │   │   │   ForgotPassword.tsx
@@ -113,14 +113,14 @@ src/
 │   │   │
 │   │   ├── components/
 │   │   │   LoginForm.tsx
-│   │   │   EmailForm.tsx        # reusable email input
-│   │   │   OtpForm.tsx          # reusable OTP input
+│   │   │   EmailForm.tsx        
+│   │   │   OtpForm.tsx          
 │   │   │   ResetPasswordForm.tsx
 │   │   │
 │   │   ├── services/
-│   │   │   authApi.ts           # login / otp / reset
+│   │   │   authApi.ts           
 │   │   │
-│   │   ├── hooks/              # (optional but powerful)
+│   │   ├── hooks/             
 │   │   │   useAuth.ts
 │   │   │
 │   │   ├── types.ts
@@ -140,7 +140,7 @@ src/
 │   │   │   UserCreation.tsx
 │   │   │   UserList.tsx
 │   │   ├── components/
-│   │   │   UserForm.tsx         # 🔥 reusable
+│   │   │   UserForm.tsx         
 │   │   │   UserTable.tsx
 │   │   ├── services/
 │   │   │   userApi.ts
@@ -163,7 +163,7 @@ src/
 ├── utils/
 │   ├── constants.ts
 │   ├── helpers.ts
-│   └── validators.ts           # 🔥 important
+│   └── validators.ts           
 │
 ├── App.tsx
 ├── main.tsx

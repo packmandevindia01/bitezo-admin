@@ -3,6 +3,8 @@ import UserTable from "../components/UserTable";
 import UserForm from "../components/UserForm";
 import { Button, Modal } from "../../../components/common";
 import type { User } from "../types";
+import { createUser } from "../services/userApi";
+import type { CreateUserPayload } from "../types";
 
 const UserList = () => {
   const [users, setUsers] = useState<User[]>([
@@ -10,7 +12,7 @@ const UserList = () => {
       id: 1,
       name: "John",
       email: "john@mail.com",
-      branch: "Calicut",
+     
       active: true,
       isMaster: false,
     },
@@ -21,23 +23,40 @@ const UserList = () => {
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   // ✅ SAVE (ADD / EDIT)
-  const handleSave = (data: Omit<User, "id">) => {
-    if (editUser) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === editUser.id ? { ...data, id: u.id } : u
-        )
-      );
-    } else {
-      setUsers((prev) => [
-        ...prev,
-        { ...data, id: Date.now() },
-      ]);
-    }
+ const handleSave = async (data: any) => {
+  try {
+    const payload: CreateUserPayload = {
+      userName: data.name.trim(),
+      password: data.password,
+      email: data.email.trim(),
+      isActive: data.active,
+      isMaster: data.isMaster,
+    };
+
+    console.log("📦 PAYLOAD", payload);
+
+    const res = await createUser(payload);
+
+    console.log("✅ API RESPONSE", res);
+
+    // OPTIONAL: update UI after API
+    setUsers((prev) => [
+      ...prev,
+      {
+        id: res.data.id,
+        name: data.name,
+        email: data.email,
+        active: data.active,
+        isMaster: data.isMaster,
+      },
+    ]);
 
     setOpen(false);
     setEditUser(null);
-  };
+  } catch (err: any) {
+    console.error("❌ API ERROR", err);
+  }
+};
 
 
 

@@ -1,19 +1,36 @@
+// ✅ UI TABLE TYPE (what you show in table)
 export interface User {
   id: number;
-  name: string;
+  name: string;        // UI friendly
   email: string;
-  branch: string;
   active: boolean;
   isMaster: boolean;
 }
 
+// ✅ FORM TYPE (frontend only)
 export interface UserFormData {
-  name: string;
+  name: string;               // UI field
   password: string;
-  confirmPassword: string;
+  confirmPassword: string;    // only for validation
   email: string;
-  branch: string;
   active: boolean;
   isMaster: boolean;
 }
 
+// ✅ API REQUEST PAYLOAD (backend contract)
+export interface CreateUserPayload {
+  userName: string;   // backend field
+  password: string;
+  email: string;
+  isActive: boolean;
+  isMaster: boolean;
+}
+
+// ✅ API RESPONSE
+export interface CreateUserResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: number;
+  };
+}

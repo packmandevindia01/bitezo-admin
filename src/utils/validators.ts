@@ -1,13 +1,29 @@
-// utils/validators.ts
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+import type { CountryCode } from "libphonenumber-js";
 
-export const isRequired = (value: string) =>
-  value.trim() !== "";
+export const isRequired = (value: any) => {
+  if (typeof value === "string") return value.trim() !== "";
+  if (typeof value === "number") return !isNaN(value);
+  if (typeof value === "boolean") return true;
+  return value !== null && value !== undefined;
+};
 
 export const isValidEmail = (email: string) =>
-  /\S+@\S+\.\S+/.test(email);
+  /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 
-export const isValidMobile = (value: string) =>
-  /^[0-9]{7,15}$/.test(value);
+export const isValidMobile = (
+  value: string,
+  country?: CountryCode
+) => {
+  const phone = parsePhoneNumberFromString(value, country);
+  return phone ? phone.isValid() : false;
+};
 
 export const isNumber = (value: string) =>
-  !isNaN(Number(value));
+  /^-?\d+(\.\d+)?$/.test(value.trim());
+
+export const countryCodeMap: Record<string, string> = {
+  India: "IN",
+  UAE: "AE",
+  Saudi: "SA",
+};
