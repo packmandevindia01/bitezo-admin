@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from "react";
 
-type ToastType = "success" | "error";
+type ToastType = "success" | "error"| "info";
 
 interface Toast {
   message: string;
@@ -31,7 +31,13 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
       {toast && (
         <div
           className={`fixed top-5 right-5 px-4 py-3 rounded-lg text-white shadow-lg z-50
-          ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}
+  ${
+    toast.type === "success"
+      ? "bg-green-500"
+      : toast.type === "error"
+      ? "bg-red-500"
+      : "bg-blue-500" // ✅ info
+  }`}
         >
           {toast.message}
         </div>

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Table, Button, StatusBadge } from "../../../components/common";
 import type { Column } from "../../../components/common/Table";
 import type { Customer } from "../types";
@@ -7,6 +8,7 @@ interface Props {
 }
 
 const CustomerTable = ({ customers }: Props) => {
+  const navigate = useNavigate();
   const columns: Column<Customer>[] = [
     { header: "#", accessor: "custId" },
     { header: "Name", accessor: "custName" },
@@ -29,14 +31,16 @@ const CustomerTable = ({ customers }: Props) => {
     {
       header: "Actions",
       accessor: "custId",
-      render: () => (
+      render: (row) => (
         <div className="flex gap-2">
-          <Button size="sm">Edit</Button>
+          <Button size="sm" onClick={() => navigate(`/dashboard/customers/edit/${row.custId}`)}>
+            Edit
+          </Button>
           <Button size="sm" variant="danger">
             Delete
           </Button>
         </div>
-      ),
+      )
     },
   ];
 

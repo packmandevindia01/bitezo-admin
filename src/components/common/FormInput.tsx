@@ -12,6 +12,7 @@ interface Props {
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   error?: string;
   disabled?: boolean;
+  readOnly?: boolean;
   autoComplete?: string;
 }
 
@@ -27,6 +28,7 @@ const FormInput = ({
   onBlur,
   error,
   disabled,
+  readOnly, // ✅ add here
   autoComplete,
 }: Props) => {
   const inputId = id || name || label?.replace(/\s+/g, "-").toLowerCase();
@@ -54,18 +56,20 @@ const FormInput = ({
         onChange={onChange}
         onBlur={onBlur}
         disabled={disabled}
+        readOnly={readOnly} // ✅ THIS FIXES EVERYTHING
         autoComplete={autoComplete}
         placeholder={placeholder || (required ? "Enter value" : "")}
         className={`
-          w-full px-3 md:px-4 py-2
-          text-sm md:text-base
-          rounded-md border outline-none transition
+    w-full px-3 md:px-4 py-2
+    text-sm md:text-base
+    rounded-md border outline-none transition
 
-          ${error ? "border-red-500" : "border-gray-300"}
-          ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
+    ${error ? "border-red-500" : "border-gray-300"}
+    ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
+    ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}  // ✅ optional UX
 
-          focus: focus:border-[#49293e]
-        `}
+    focus: focus:border-[#49293e]
+  `}
       />
 
       {/* ERROR */}

@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "../../../store/store";
+import { fetchCustomers } from "../../../store/customerSlice";
 import {
   FormInput,
   Button,
@@ -7,16 +11,20 @@ import {
   Loader, // ✅ using your loader
 } from "../../../components/common";
 
-import { createCustomer } from "../services/customerApi";
+import { createCustomer, updateCustomer, getCustomerById } from "../services/customerApi";
 import type { CustomerFormData } from "../types";
 import { useToast } from "../../../context/ToastContext";
 import type { CountryCode } from "libphonenumber-js";
 
 import { validateCustomer } from "../utils/customerValidation";
 import { formatPhone } from "../utils/formatters";
+import { getNextRegId } from "../services/customerApi";
+import { mapCountry } from "../utils/countryMapper";
+
 
 const initialState: CustomerFormData = {
   custName: "",
+  regId: "",
   custMob: "",
   custTel: "",
   country: "IN",
@@ -29,7 +37,7 @@ const initialState: CustomerFormData = {
   email: "",
   taxRegNo: "",
   branchCount: 0,
-  regId: "",
+
   database: "",
   conMode: "",
   fileName: "",
@@ -41,6 +49,11 @@ const initialState: CustomerFormData = {
 const CustomerForm = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { id } = useParams();
+  const isEdit = !!id;
+
 
   const [form, setForm] = useState<CustomerFormData>({ ...initialState });
 
@@ -48,7 +61,43 @@ const CustomerForm = () => {
     Partial<Record<keyof CustomerFormData, string>>
   >({});
 
-  const [submitting, setSubmitting] = useState(false); // ✅ loading state
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        if (id) {
+          // ✅ EDIT MODE
+          const customer = await getCustomerById(Number(id));
+
+          setForm({
+            ...initialState,
+            ...customer,
+
+            country:
+              customer.country?.length === 2
+                ? (customer.country as CountryCode)
+                : mapCountry(customer.country),
+
+            conMode: customer.conMode?.toLowerCase(),
+          });
+        } else {
+          // ✅ CREATE MODE
+          const regId = await getNextRegId();
+
+          setForm((prev) => ({
+            ...prev,
+            regId,
+          }));
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to load customer ❌", "error");
+      }
+    };
+
+    init();
+  }, [id]);
 
   const handleChange = (key: keyof CustomerFormData, value: any) => {
     if (submitting) return; // ✅ prevent changes while loading
@@ -67,59 +116,62 @@ const CustomerForm = () => {
     setSubmitting(true);
 
     try {
-      await createCustomer({
-        ...form,
-        custMob: formatPhone(form.custMob, form.country as CountryCode),
-        createdDate: new Date().toISOString(),
-      });
+      if (isEdit) {
+        // ✅ UPDATE
+        await updateCustomer(Number(id), {
+          ...form,
+          custId: Number(id),
+          custMob: formatPhone(form.custMob, form.country as CountryCode),
+        });
 
-      showToast("Customer created successfully 🎉", "success");
+        showToast("Customer updated successfully ✏️", "success");
+      } else {
+        // ✅ CREATE
+        await createCustomer({
+          ...form,
+          custMob: formatPhone(form.custMob, form.country as CountryCode),
+          createdDate: new Date().toISOString(),
+        });
 
-      setForm({ ...initialState });
+        showToast("Customer created successfully 🎉", "success");
+      }
 
-      // ✅ navigate back
+      // 🔥 IMPORTANT → sync Redux store
+      dispatch(fetchCustomers());
+
+      // ✅ Navigate after success
       navigate("/dashboard/customers");
-    }catch (err: any) {
-  console.error(err);
 
-  let message = err.message || "Something went wrong";
+    } catch (err: any) {
+      console.error(err);
 
-  // ✅ show toast
-  showToast(message + " ❌", "error");
+      let message = err.message || "Something went wrong";
+      showToast(message + " ❌", "error");
 
-  // ✅ extract field safely
-  if (message.includes("Conflict detected on:")) {
-    let field = message.split(":")[1]?.trim();
+      if (message.includes("Conflict detected on:")) {
+        let field = message.split(":")[1]?.trim();
+        const normalizedField = field?.toLowerCase();
 
-    // 🔥 normalize (IMPORTANT)
-    const normalizedField = field?.toLowerCase();
+        let key: keyof CustomerFormData | undefined;
 
-    const fieldMap: Record<string, keyof CustomerFormData> = {
-      "customer name": "custName",
-      "email": "email",
-      "registration id": "regId",
-      "mobile no": "custMob",
-      "cr no": "crNo",
-    };
+        if (normalizedField.includes("customer")) key = "custName";
+        else if (normalizedField.includes("email")) key = "email";
+        else if (normalizedField.includes("registration")) key = "regId";
+        else if (normalizedField.includes("mobile")) key = "custMob";
+        else if (normalizedField.includes("cr")) key = "crNo";
+        else if (normalizedField.includes("database")) key = "database";
 
-    const key = fieldMap[normalizedField];
-
-    console.log("🔍 FIELD:", field);
-    console.log("🔍 NORMALIZED:", normalizedField);
-    console.log("🔍 KEY:", key);
-
-    if (key) {
-      setErrors((prev) => ({
-        ...prev,
-        [key]: `${field} already exists`,
-      }));
-    }
-  }
-} finally {
+        if (key) {
+          setErrors((prev) => ({
+            ...prev,
+            [key]: `${field} already exists`,
+          }));
+        }
+      }
+    } finally {
       setSubmitting(false);
     }
   };
-
   return (
     <>
       {/* 🔥 FULL SCREEN LOADER */}
@@ -139,14 +191,12 @@ const CustomerForm = () => {
           disabled={submitting}
         />
 
-        <FormInput
+        {<FormInput
           label="Registration ID"
-          required
-          value={form.regId}
-          onChange={(e) => handleChange("regId", e.target.value)}
-          error={errors.regId}
-          disabled={submitting}
-        />
+          value={form.regId || "Loading..."}
+          readOnly
+          disabled
+        />}
 
         <SelectInput
           label="Country"
@@ -159,6 +209,13 @@ const CustomerForm = () => {
             { label: "India", value: "IN" },
             { label: "UAE", value: "AE" },
             { label: "Saudi Arabia", value: "SA" },
+            { label: "Bahrain", value: "BH" },
+            { label: "Oman", value: "OM" },
+            { label: "Qatar", value: "QA" },
+            { label: "Kuwait", value: "KW" },
+            { label: "Singapore", value: "SG" },
+            { label: "Malaysia", value: "MY" },
+            { label: "Thailand", value: "TH" },
           ]}
           disabled={submitting}
         />
@@ -284,7 +341,16 @@ const CustomerForm = () => {
       <div className="mt-6 flex justify-end gap-3">
         <Button
           variant="secondary"
-          onClick={() => setForm(initialState)}
+          onClick={async () => {
+            if (isEdit) return; // ❌ don't reset edit form
+
+            const regId = await getNextRegId();
+
+            setForm({
+              ...initialState,
+              regId,
+            });
+          }}
           disabled={submitting}
         >
           Clear

@@ -10,7 +10,7 @@ interface Props {
 }
 
 const UserForm = ({ initialData, onSubmit, onCancel }: Props) => {
-  
+
   const [form, setForm] = useState<UserFormData>({
     name: "",
     password: "",
@@ -32,6 +32,8 @@ const UserForm = ({ initialData, onSubmit, onCancel }: Props) => {
         email: initialData.email,
         active: initialData.active,
         isMaster: initialData.isMaster,
+        password: "", // 🔥 reset password
+        confirmPassword: "",
       }));
     }
   }, [initialData]);
@@ -45,12 +47,20 @@ const UserForm = ({ initialData, onSubmit, onCancel }: Props) => {
     const newErrors: typeof errors = {};
 
     if (!isRequired(form.name)) newErrors.name = "Required";
-    if (!isRequired(form.password)) newErrors.password = "Required";
-    if (!isRequired(form.confirmPassword))
-      newErrors.confirmPassword = "Required";
+    if (!initialData && !isRequired(form.password)) {
+      newErrors.password = "Required";
+    }
 
-    if (form.password !== form.confirmPassword)
+    if (!initialData && !isRequired(form.confirmPassword)) {
+      newErrors.confirmPassword = "Required";
+    }
+
+    if (
+      !initialData &&
+      form.password !== form.confirmPassword
+    ) {
       newErrors.confirmPassword = "Passwords do not match";
+    }
 
     if (!isRequired(form.email)) newErrors.email = "Required";
     if (!initialData && !isRequired(form.password)) {
@@ -74,21 +84,21 @@ const UserForm = ({ initialData, onSubmit, onCancel }: Props) => {
   };
 
   const handleSubmit = () => {
-  console.log("🟢 BUTTON CLICKED"); // 👈 ADD THIS
+    console.log("🟢 BUTTON CLICKED"); // 👈 ADD THIS
 
-  if (!validate()) {
-    console.log("❌ VALIDATION FAILED");
-    return;
-  }
+    if (!validate()) {
+      console.log("❌ VALIDATION FAILED");
+      return;
+    }
 
-  console.log("✅ VALIDATION PASSED");
+    console.log("✅ VALIDATION PASSED");
 
-  const { confirmPassword, ...payload } = form;
+    const { confirmPassword, ...payload } = form;
 
-  console.log("📤 SENDING TO PARENT", payload);
+    console.log("📤 SENDING TO PARENT", payload);
 
-  onSubmit(payload);
-};
+    onSubmit(payload);
+  };
 
   return (
     <>

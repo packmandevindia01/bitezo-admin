@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ NEW
+import { useNavigate } from "react-router-dom";
 import CustomerTable from "../components/CustomerTable";
-import { getCustomers } from "../services/customerApi";
-import type { Customer } from "../types";
 import { useToast } from "../../../context/ToastContext";
+
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "../../../store/store";
+import { fetchCustomers } from "../../../store/customerSlice";
 
 // ✅ common components
 import {
@@ -15,32 +17,29 @@ import {
 
 const CustomerList = () => {
   const { showToast } = useToast();
-  const navigate = useNavigate(); // ✅ NEW
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(false);
+  // ✅ GET DATA FROM REDUX
+  const { list: customers, loading, error } = useSelector(
+    (state: RootState) => state.customers
+  );
 
   // 📄 pagination
   const [page, setPage] = useState(1);
   const pageSize = 8;
 
-  // ✅ fetch customers
-  const fetchCustomers = async () => {
-    setLoading(true);
-    try {
-      const data = await getCustomers();
-      setCustomers(data);
-    } catch (err) {
-      console.error(err);
-      showToast("Failed to load customers ❌", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // ✅ FETCH DATA USING REDUX
   useEffect(() => {
-    fetchCustomers();
-  }, []);
+    dispatch(fetchCustomers());
+  }, [dispatch]);
+
+  // ❗ Handle error (optional but good)
+  useEffect(() => {
+    if (error) {
+      showToast(error + " ❌", "error");
+    }
+  }, [error]);
 
   // 📄 pagination calculation
   const totalPages = Math.ceil(customers.length / pageSize);
@@ -59,7 +58,7 @@ const CustomerList = () => {
         title="No customers found"
         description="There are no customers available right now."
         actionLabel="Add Customer"
-        onAction={() => navigate("/dashboard/customers/create")} // ✅ navigate
+        onAction={() => navigate("/dashboard/customers/create")}
       />
     );
 

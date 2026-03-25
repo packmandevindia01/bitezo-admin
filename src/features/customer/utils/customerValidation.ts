@@ -13,9 +13,9 @@ export const validateCustomer = (form: CustomerFormData) => {
     errors.custName = "Company name is required";
   }
 
-  if (!isRequired(form.regId)) {
+  /* if (!isRequired(form.regId)) {
     errors.regId = "Customer ID is required";
-  }
+  } */
 
   if (!isRequired(form.custMob)) {
     errors.custMob = "Mobile number is required";
