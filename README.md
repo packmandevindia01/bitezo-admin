@@ -73,98 +73,105 @@ export default defineConfig([
 ```
 
 src/
+├── App.tsx
+├── index.css
+├── main.tsx
 │
-├── app/                         
-│   ├── store.ts
-│   ├── hooks.ts
-│
-├── assets/                    
-├── components/                 
+├── components/
 │   ├── common/
-│   │   FormInput.tsx
-│   │   SelectInput.tsx
-│   │   Button.tsx
-│   │   Checkbox.tsx
-│   │   Table.tsx
-│   │   StatusBadge.tsx
-│   │   Modal.tsx
-│   │   Loader.tsx
-|   |   
-│   │   EmptyState.tsx
-│   │   Pagination.tsx
-│   │   SearchBar.tsx
-│   │   index.ts,
-│   ├── layout/
-│   │   Sidebar.tsx
-│   │   SidebarItem.tsx
-│   │   SidebarDropdown.tsx
-│   │   Topbar.tsx
-│   │   Navbar.tsx
-│   │   MainLayout.tsx
+│   │   ├── Button.tsx
+│   │   ├── Checkbox.tsx
+│   │   ├── EmptyState.tsx
+│   │   ├── FormInput.tsx
+│   │   ├── Loader.tsx
+│   │   ├── Modal.tsx
+│   │   ├── Pagination.tsx
+│   │   ├── SearchBar.tsx
+│   │   ├── SelectInput.tsx
+│   │   ├── StatusBadge.tsx
+│   │   ├── Table.tsx
+│   │   └── index.ts
+│   └── layout/
+│       ├── MainLayout.tsx
+│       ├── Navbar.tsx
+│       ├── Sidebar.tsx
+│       ├── SidebarDropdown.tsx
+│       ├── SidebarItem.tsx
+│       └── Topbar.tsx
 │
-├── features/                    
+├── context/
+│   └── ToastContext.tsx
 │
-│   ├── auth/                   
-│   │   ├── pages/
-│   │   │   LoginPage.tsx
-│   │   │   ForgotPassword.tsx
-│   │   │   VerifyOtp.tsx
-│   │   │   ResetPassword.tsx
-│   │   │
+├── features/
+│   ├── auth/
 │   │   ├── components/
-│   │   │   LoginForm.tsx
-│   │   │   EmailForm.tsx        
-│   │   │   OtpForm.tsx          
-│   │   │   ResetPasswordForm.tsx
-│   │   │
-│   │   ├── services/
-│   │   │   authApi.ts           
-│   │   │
-│   │   ├── hooks/             
-│   │   │   useAuth.ts
-│   │   │
-│   │   ├── types.ts
-│   │   └── constants.ts
+│   │   │   ├── EmailForm.tsx
+│   │   │   ├── LoginForm.tsx
+│   │   │   ├── OtpForm.tsx
+│   │   │   ├── OtpInput.tsx
+│   │   │   └── ResetPasswordForm.tsx
+│   │   ├── pages/
+│   │   │   ├── ForgotPasswordPage.tsx
+│   │   │   ├── LoginPage.tsx
+│   │   │   ├── ResetPasswordPage.tsx
+│   │   │   └── VerifyOtpPage.tsx
+│   │   └── services/
+│   │       └── authApi.ts
 │   │
-│   ├── company/
-│   │   ├── pages/
-│   │   │   CompanyRegistration.tsx
+│   ├── customer/
 │   │   ├── components/
-│   │   │   CompanyForm.tsx     
+│   │   │   ├── CustomerForm.tsx
+│   │   │   └── CustomerTable.tsx
+│   │   ├── pages/
+│   │   │   ├── CustomerListPage.tsx
+│   │   │   └── CustomerRegistrationPage.tsx
 │   │   ├── services/
-│   │   │   companyApi.ts
+│   │   │   └── customerApi.ts
+│   │   ├── utils/
+│   │   │   ├── countryMapper.ts
+│   │   │   ├── customerValidation.ts
+│   │   │   └── formatters.ts
 │   │   └── types.ts
 │   │
-│   ├── user/
-│   │   ├── pages/
-│   │   │   UserCreation.tsx
-│   │   │   UserList.tsx
+│   ├── dashboard/
 │   │   ├── components/
-│   │   │   UserForm.tsx         
-│   │   │   UserTable.tsx
-│   │   ├── services/
-│   │   │   userApi.ts
-│   │   └── types.ts
+│   │   │   ├── PurchaseChart.tsx
+│   │   │   ├── SalesChart.tsx
+│   │   │   └── StatCard.tsx
+│   │   └── pages/
+│   │       └── DashboardPage.tsx
 │   │
-│   ├── sales/
-│   ├── purchase/
 │   ├── reports/
-│   └── inventory/
+│   │   ├── pages/
+│   │   │   └── ReportsPage.tsx
+│   │   ├── services/
+│   │   │   └── customerRptListApi.ts
+│   │   └── utils/
+│   │       ├── customerReport.ts
+│   │       ├── exportExcel.ts
+│   │       ├── exportPDF.ts
+│   │       ├── reportHelpers.ts
+│   │       └── userReport.ts
+│   │
+│   └── user/
+│       ├── components/
+│       │   ├── UserForm.tsx
+│       │   └── UserTable.tsx
+│       ├── pages/
+│       │   ├── UserCreationPage.tsx
+│       │   └── UserList.tsx
+│       ├── services/
+│       │   └── userApi.ts
+│       └── types.ts
 │
 ├── routes/
-│   └── AppRoutes.tsx
+│   ├── Approutes.tsx
+│   └── ProtectedRoute.tsx
 │
-├── services/
-│   └── axiosInstance.ts
+├── store/
+│   ├── customerSlice.ts
+│   ├── store.ts
+│   └── userSlice.ts
 │
-├── types/
-│   └── index.ts
-│
-├── utils/
-│   ├── constants.ts
-│   ├── helpers.ts
-│   └── validators.ts           
-│
-├── App.tsx
-├── main.tsx
-└── index.css
+└── utils/
+    └── validators.ts

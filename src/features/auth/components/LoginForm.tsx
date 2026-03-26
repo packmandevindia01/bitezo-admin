@@ -18,6 +18,7 @@ const LoginForm = () => {
     // 🔥 Basic validation
     if (!email || !password) {
       showToast("Please enter username and password", "error");
+       
       return;
     }
 
@@ -90,9 +91,10 @@ const LoginForm = () => {
       </p>
 
       {/* BUTTON */}
-      <Button type="submit" size="lg" fullWidth disabled={loading}>
+      <Button type="submit" size="lg" fullWidth disabled={loading} >
         {loading ? "Logging in..." : "Login"}
       </Button>
+      
     </form>
   );
 };

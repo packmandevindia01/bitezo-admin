@@ -9,6 +9,7 @@ import {
 
 import SidebarItem from "./SidebarItem";
 import SidebarDropdown from "./SidebarDropdown";
+import logo from '../../assets/logo.jpeg'
 
 interface Props {
   isOpen: boolean;
@@ -35,9 +36,13 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
         <X size={20} onClick={onClose} className="cursor-pointer" />
       </div>
 
-      {/* LOGO */}
-      <div className="h-16 md:h-20 flex items-center px-4 font-bold text-xl border-b border-gray-200 text-[#49293e]">
-        Bitezo
+      <div className="h-20 flex items-center gap-2 px-4 border-b border-gray-200">
+        <img
+          src={logo}
+          alt="Bitezo Logo"
+          className="h-12 w-12 rounded-full object-cover shrink-0"
+        />
+        <span className="font-bold text-xl text-[#49293e]">Bitezo</span>
       </div>
 
       {/* MENU */}
@@ -52,9 +57,6 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
             onClose();
           }}
         />
-
-         
-        
 
         {/* Master */}
         <SidebarDropdown icon={<Package size={18} />} label="Master">
@@ -81,9 +83,27 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
 
         {/* Reports */}
         <SidebarDropdown icon={<BarChart3 size={18} />} label="Reports">
-          <div className="px-6 py-2 hover:text-[#49293e] cursor-pointer text-sm">
-            Sales Report
-          </div>
+          <SidebarDropdown icon={<Package size={18} />} label="General">
+            <div
+              onClick={() => {
+                navigate("/dashboard/users-reports");
+                onClose();
+              }}
+              className="px-4 py-2 rounded-md hover:bg-gray-100 hover:text-[#49293e] transition cursor-pointer"
+            >
+              Users
+            </div>
+
+            <div
+              onClick={() => {
+                navigate("/dashboard/customers-reports");
+                onClose();
+              }}
+              className="px-4 py-2 rounded-md hover:bg-gray-100 hover:text-[#49293e] transition cursor-pointer"
+            >
+              Customers
+            </div>
+          </SidebarDropdown>
 
           <div className="px-6 py-2 hover:text-[#49293e] cursor-pointer text-sm">
             Stock Report
@@ -99,7 +119,6 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
             onClose();
           }}
         />
-
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
-import { Menu, Plus, Download, LogOut } from "lucide-react";
+import { Menu,  LogOut } from "lucide-react";
 import { Button, Modal } from "../common";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useToast } from "../../context/ToastContext";
+
 
 interface TopbarProps {
   toggleSidebar: () => void;
@@ -24,7 +25,7 @@ const Topbar = ({ toggleSidebar }: TopbarProps) => {
 
   return (
     <>
-      <div className="w-full flex justify-between items-center bg-white px-4 md:px-6 h-18 md:h-20 border-b border-gray-200 shadow-sm">
+      <div className="w-full flex justify-between items-center bg-white px-4 md:px-6 h-20 border-b border-gray-200 shadow-sm">
 
         {/* LEFT */}
         <div className="flex items-center gap-2 sm:gap-4">
@@ -43,15 +44,15 @@ const Topbar = ({ toggleSidebar }: TopbarProps) => {
         {/* RIGHT */}
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
 
-          <Button size="sm" className="flex items-center gap-1 sm:gap-2">
+         {/*  <Button size="sm" className="flex items-center gap-1 sm:gap-2">
             <Plus size={14} />
             <span className="hidden sm:inline">Add</span>
-          </Button>
+          </Button> */}
 
-          <Button variant="secondary" size="sm" className="flex items-center gap-1 sm:gap-2">
+          {/* <Button variant="secondary" size="sm" className="flex items-center gap-1 sm:gap-2">
             <Download size={14} />
             <span className="hidden sm:inline">Export</span>
-          </Button>
+          </Button> */}
 
           {/* 🔥 Logout */}
           <Button

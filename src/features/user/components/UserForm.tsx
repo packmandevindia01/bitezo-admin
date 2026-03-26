@@ -105,6 +105,7 @@ const UserForm = ({ initialData, onSubmit, onCancel }: Props) => {
       <div className="flex flex-col gap-4 max-w-lg mx-auto">
         <FormInput
           label="User Name"
+          autoFocus
           value={form.name}
           onChange={(e) => handleChange("name", e.target.value)}
           error={errors.name}

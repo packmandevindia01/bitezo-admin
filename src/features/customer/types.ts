@@ -26,9 +26,29 @@ export interface Customer {
   custId: number;
   custName: string;
   custMob: string;
-  country: string; // API gives string, not CountryCode
-  area: string;
+  custTel?: string;
+
+  country: string;
+  block?: string;
+  area?: string;
+  road?: string;
+  building?: string;
+  flatNo?: string;
+
+  crNo?: string;
+  email?: string;
+  taxRegNo?: string;
+
   branchCount: number;
   regId: string;
-  isDemo: string; // "Demo"
+
+  database?: string;
+  conMode?: string; // ✅ FIX ADDED
+
+  fileName?: string;
+  filePath?: string;
+
+  isDemo: string;
+
+  createdDate?: string;
 }

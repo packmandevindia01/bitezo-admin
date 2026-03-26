@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -45,6 +46,8 @@ const initialState: CustomerFormData = {
   isDemo: true,
   createdDate: new Date().toISOString(),
 };
+const firstInputRef = useRef<HTMLInputElement>(null);
+  const saveButtonRef = useRef<HTMLButtonElement>(null);
 
 const CustomerForm = () => {
   const { showToast } = useToast();
@@ -108,8 +111,11 @@ const CustomerForm = () => {
   const handleSubmit = async () => {
     const validationErrors = validateCustomer(form);
 
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      showToast("Please fill all required fields ❌", "error");
+
       return;
     }
 
@@ -184,11 +190,13 @@ const CustomerForm = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormInput
           label="Customer Name"
+          
           required
           value={form.custName}
           onChange={(e) => handleChange("custName", e.target.value)}
           error={errors.custName}
           disabled={submitting}
+          
         />
 
         {<FormInput
@@ -217,6 +225,7 @@ const CustomerForm = () => {
             { label: "Malaysia", value: "MY" },
             { label: "Thailand", value: "TH" },
           ]}
+          error={errors.country}
           disabled={submitting}
         />
 
@@ -293,6 +302,7 @@ const CustomerForm = () => {
             { label: "Online", value: "online" },
             { label: "Offline", value: "offline" },
           ]}
+          error={errors.conMode}
           disabled={submitting}
         />
 
