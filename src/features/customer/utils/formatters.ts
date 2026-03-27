@@ -5,6 +5,9 @@ export const formatPhone = (
   value: string,
   country: CountryCode
 ): string => {
-  const phone = parsePhoneNumberFromString(value, country);
-  return phone ? phone.number : value;
+  if (!value || !value.trim()) return "-";
+
+  const phone = parsePhoneNumberFromString(value.trim(), country);
+
+  return phone?.isValid() ? phone.number : value.trim();
 };

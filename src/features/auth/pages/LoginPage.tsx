@@ -1,4 +1,4 @@
-import logo from '../../../assets/logo.jpeg'
+import logo from '../../../assets/logo.png'
  
 import LoginForm from "../components/LoginForm";
 

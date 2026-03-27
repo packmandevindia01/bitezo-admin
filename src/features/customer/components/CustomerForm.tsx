@@ -46,8 +46,7 @@ const initialState: CustomerFormData = {
   isDemo: true,
   createdDate: new Date().toISOString(),
 };
-const firstInputRef = useRef<HTMLInputElement>(null);
-  const saveButtonRef = useRef<HTMLButtonElement>(null);
+
 
 const CustomerForm = () => {
   const { showToast } = useToast();
@@ -65,6 +64,7 @@ const CustomerForm = () => {
   >({});
 
   const [submitting, setSubmitting] = useState(false);
+  const saveBtnRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -108,76 +108,64 @@ const CustomerForm = () => {
     setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
-  const handleSubmit = async () => {
-    const validationErrors = validateCustomer(form);
+ const handleSubmit = async () => {
+  const validationErrors = validateCustomer(form);
 
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    showToast("Please fill all required fields ❌", "error");
+    return;
+  }
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      showToast("Please fill all required fields ❌", "error");
+  setSubmitting(true);
 
-      return;
+  try {
+    if (isEdit) {
+      await updateCustomer(Number(id), {
+        ...form,
+        custId: Number(id),
+        custMob: formatPhone(form.custMob?.trim() || "", form.country as CountryCode), // ✅ guarded
+      });
+      showToast("Customer updated successfully ✏️", "success");
+    } else {
+      await createCustomer({
+        ...form,
+        custMob: formatPhone(form.custMob?.trim() || "", form.country as CountryCode), // ✅ guarded
+        createdDate: new Date().toISOString(),
+      });
+      showToast("Customer created successfully 🎉", "success");
     }
 
-    setSubmitting(true);
+    dispatch(fetchCustomers());
+    navigate("/dashboard/customers");
 
-    try {
-      if (isEdit) {
-        // ✅ UPDATE
-        await updateCustomer(Number(id), {
-          ...form,
-          custId: Number(id),
-          custMob: formatPhone(form.custMob, form.country as CountryCode),
-        });
+  } catch (err: any) {
+    console.error(err);
 
-        showToast("Customer updated successfully ✏️", "success");
-      } else {
-        // ✅ CREATE
-        await createCustomer({
-          ...form,
-          custMob: formatPhone(form.custMob, form.country as CountryCode),
-          createdDate: new Date().toISOString(),
-        });
+    let message = err.message || "Something went wrong";
+    showToast(message + " ❌", "error");
 
-        showToast("Customer created successfully 🎉", "success");
+    if (message.includes("Conflict detected on:")) {
+      let field = message.split(":")[1]?.trim();
+      const normalizedField = field?.toLowerCase();
+
+      let key: keyof CustomerFormData | undefined;
+
+      if (normalizedField.includes("customer")) key = "custName";
+      else if (normalizedField.includes("email")) key = "email";
+      else if (normalizedField.includes("registration")) key = "regId";
+      else if (normalizedField.includes("mobile")) key = "custMob";
+      else if (normalizedField.includes("cr")) key = "crNo";
+      else if (normalizedField.includes("database")) key = "database";
+
+      if (key) {
+        setErrors((prev) => ({ ...prev, [key]: `${field} already exists` }));
       }
-
-      // 🔥 IMPORTANT → sync Redux store
-      dispatch(fetchCustomers());
-
-      // ✅ Navigate after success
-      navigate("/dashboard/customers");
-
-    } catch (err: any) {
-      console.error(err);
-
-      let message = err.message || "Something went wrong";
-      showToast(message + " ❌", "error");
-
-      if (message.includes("Conflict detected on:")) {
-        let field = message.split(":")[1]?.trim();
-        const normalizedField = field?.toLowerCase();
-
-        let key: keyof CustomerFormData | undefined;
-
-        if (normalizedField.includes("customer")) key = "custName";
-        else if (normalizedField.includes("email")) key = "email";
-        else if (normalizedField.includes("registration")) key = "regId";
-        else if (normalizedField.includes("mobile")) key = "custMob";
-        else if (normalizedField.includes("cr")) key = "crNo";
-        else if (normalizedField.includes("database")) key = "database";
-
-        if (key) {
-          setErrors((prev) => ({
-            ...prev,
-            [key]: `${field} already exists`,
-          }));
-        }
-      }
-    } finally {
-      setSubmitting(false);
     }
-  };
+  } finally {
+    setSubmitting(false);
+  }
+};
   return (
     <>
       {/* 🔥 FULL SCREEN LOADER */}
@@ -192,6 +180,7 @@ const CustomerForm = () => {
           label="Customer Name"
           
           required
+          autoFocus
           value={form.custName}
           onChange={(e) => handleChange("custName", e.target.value)}
           error={errors.custName}
@@ -345,6 +334,13 @@ const CustomerForm = () => {
           value={form.flatNo}
           onChange={(e) => handleChange("flatNo", e.target.value)}
           disabled={submitting}
+          onKeyDown={(e) => {
+            // From `Flat No`, move keyboard focus to Save.
+            if (e.key === "Enter" || (e.key === "Tab" && !e.shiftKey)) {
+              e.preventDefault();
+              saveBtnRef.current?.focus();
+            }
+          }}
         />
       </div>
 
@@ -366,7 +362,7 @@ const CustomerForm = () => {
           Clear
         </Button>
 
-        <Button onClick={handleSubmit} disabled={submitting}>
+        <Button ref={saveBtnRef} onClick={handleSubmit} disabled={submitting}>
           {submitting ? (
             <span className="flex items-center gap-2">
               <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />

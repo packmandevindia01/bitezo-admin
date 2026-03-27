@@ -1,39 +1,63 @@
-export const getCustomerReport = async (params: {
+// src/features/reports/services/customerRptListApi.ts
+import api from "../../../utils/api";
+
+export interface CustomerRptListParams {
   custName?: string;
   regId?: string;
   country?: string;
   isDemo?: string;
   database?: string;
   conMode?: string;
-}) => {
-  const query = new URLSearchParams();
+}
 
-  // ✅ Always send defaults (IMPORTANT)
-  query.append("country", params.country || "All");
-  query.append("isDemo", params.isDemo || "All");
-  query.append("conMode", params.conMode || "All");
+export interface CustomerRptListRow {
+  custId: number;
+  custName: string;
+  custMob: string;
+  country: string;
+  regId: string;
+  database: string;
+  conMode: string;
+  isDemo: string;
+}
 
-  if (params.custName) query.append("custName", params.custName);
-  if (params.regId) query.append("regId", params.regId);
-  if (params.database) query.append("database", params.database);
+export interface CustomerRptListResult {
+  rows: CustomerRptListRow[];
+  emptyMessage?: string;
+}
 
-  const res = await fetch(
-    `http://84.255.173.131:8088/api/admin/customer/rptlist?${query.toString()}`
-  );
-
-  const text = await res.text();
-
-  let data;
+export const getCustomerReport = async (
+  params: CustomerRptListParams
+): Promise<CustomerRptListRow[]> => {
   try {
-    data = JSON.parse(text);
-  } catch {
-    data = [];
+    const response = await api.get("/api/admin/customer/rptlist", {
+      params: {
+        country: params.country || "All",
+        isDemo: params.isDemo || "All",
+        conMode: params.conMode || "All",
+        ...(params.custName && { custName: params.custName }),
+        ...(params.regId && { regId: params.regId }),
+        ...(params.database && { database: params.database }),
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.message?.includes("No customers found")) return [];
+    throw error;
   }
+};
 
-  if (!res.ok) {
-    if (text.includes("No customers found")) return [];
-    throw new Error("Failed to fetch report");
+// Legacy export kept for ReportsPage compatibility
+export const fetchCustomerRptList = async (
+  params: CustomerRptListParams
+): Promise<CustomerRptListResult> => {
+  try {
+    const rows = await getCustomerReport(params);
+    return { rows };
+  } catch (error: any) {
+    if (error.message?.includes("No customers found")) {
+      return { rows: [], emptyMessage: "No customers found" };
+    }
+    throw error;
   }
-
-  return data;
 };

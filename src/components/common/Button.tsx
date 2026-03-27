@@ -12,17 +12,21 @@ interface ButtonProps {
   className?: string;
 }
 
-const Button = ({
-  children,
-  variant = "primary",
-  size = "md",
-  onClick,
-  type = "button",
-  disabled = false,
-  loading = false,
-  fullWidth = false,
-  className = "",
-}: ButtonProps) => {
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      children,
+      variant = "primary",
+      size = "md",
+      onClick,
+      type = "button",
+      disabled = false,
+      loading = false,
+      fullWidth = false,
+      className = "",
+    },
+    ref
+  ) => {
 
   // 🎨 Variant styles
   const variants = {
@@ -43,6 +47,7 @@ const Button = ({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
+      ref={ref}
       className={`
         rounded-md font-medium transition
         flex items-center justify-center gap-2
@@ -65,6 +70,9 @@ const Button = ({
       {loading ? "Please wait..." : children}
     </button>
   );
-};
+}
+);
+
+Button.displayName = "Button";
 
 export default Button;

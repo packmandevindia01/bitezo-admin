@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+// src/components/layout/Sidebar.tsx
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   BarChart3,
@@ -9,7 +10,7 @@ import {
 
 import SidebarItem from "./SidebarItem";
 import SidebarDropdown from "./SidebarDropdown";
-import logo from '../../assets/logo.jpeg'
+import logo from "../../assets/logo.png";
 
 interface Props {
   isOpen: boolean;
@@ -18,109 +19,121 @@ interface Props {
 
 const Sidebar = ({ isOpen, onClose }: Props) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  return (
+  const isActive = (path: string) => location.pathname === path;
+
+  const navItem = (path: string, label: string) => (
     <div
+      onClick={() => { navigate(path); onClose(); }}
       className={`
-        fixed md:static top-0 left-0 h-full w-64
-        bg-white flex flex-col z-50
-        border-r border-gray-200
-        transform
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0
-        transition-transform duration-300 ease-in-out
+        px-4 py-2 rounded-lg cursor-pointer text-sm font-medium transition-all duration-150
+        ${isActive(path)
+          ? "bg-[#49293e]/10 text-[#49293e] font-semibold"
+          : "text-gray-500 hover:bg-gray-100 hover:text-[#49293e]"
+        }
       `}
     >
-      {/* CLOSE BUTTON (MOBILE) */}
-      <div className="md:hidden flex justify-end p-4">
-        <X size={20} onClick={onClose} className="cursor-pointer" />
-      </div>
+      {label}
+    </div>
+  );
 
-      <div className="h-20 flex items-center gap-2 px-4 border-b border-gray-200">
-        <img
-          src={logo}
-          alt="Bitezo Logo"
-          className="h-12 w-12 rounded-full object-cover shrink-0"
+  return (
+    <>
+      {/* MOBILE OVERLAY */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 z-40 md:hidden"
+          onClick={onClose}
         />
-        <span className="font-bold text-xl text-[#49293e]">Bitezo</span>
-      </div>
+      )}
 
-      {/* MENU */}
-      <div className="flex flex-col text-sm md:text-base flex-1 overflow-y-auto py-2">
-
-        {/* Dashboard */}
-        <SidebarItem
-          icon={<LayoutDashboard size={18} />}
-          label="Dashboard"
-          onClick={() => {
-            navigate("/dashboard");
-            onClose();
-          }}
-        />
-
-        {/* Master */}
-        <SidebarDropdown icon={<Package size={18} />} label="Master">
-          <div
-            onClick={() => {
-              navigate("/dashboard/users");
-              onClose();
-            }}
-            className="px-4 py-2 rounded-md hover:bg-gray-100 hover:text-[#49293e] transition cursor-pointer"
+      <div
+        className={`
+          fixed md:static top-0 left-0 h-full w-64
+          bg-white flex flex-col z-50
+          border-r border-gray-100
+          shadow-[2px_0_20px_rgba(0,0,0,0.06)]
+          transform
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0
+          transition-transform duration-300 ease-in-out
+        `}
+      >
+        {/* CLOSE BUTTON (MOBILE) */}
+        <div className="md:hidden flex justify-end px-3 pt-3 pb-0">
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition text-gray-400"
           >
-            Users
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* LOGO + BRAND */}
+        <div className="flex flex-col items-center justify-center gap-2 pt-4 pb-4 md:pt-8 md:pb-6 px-4">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full bg-linear-to-br from-[#49293e]/20 to-[#49293e]/5 scale-110" />
+            <img
+              src={logo}
+              alt="Bitezo Logo"
+              className="relative h-12 w-12 md:h-20 md:w-20 rounded-full object-cover shadow-lg ring-2 ring-[#49293e]/20"
+            />
           </div>
-
-          <div
-            onClick={() => {
-              navigate("/dashboard/customers");
-              onClose();
-            }}
-            className="px-4 py-2 rounded-md hover:bg-gray-100 hover:text-[#49293e] transition cursor-pointer"
-          >
-            Customers
+          <div className="text-center">
+            <span className="font-bold text-lg md:text-xl text-[#49293e] tracking-wide block">
+              Bitezo
+            </span>
+            <span className="text-[10px] text-gray-400 uppercase tracking-widest font-medium hidden md:block">
+              Admin Panel
+            </span>
           </div>
-        </SidebarDropdown>
+        </div>
 
-        {/* Reports */}
-        <SidebarDropdown icon={<BarChart3 size={18} />} label="Reports">
-          <SidebarDropdown icon={<Package size={18} />} label="General">
-            <div
-              onClick={() => {
-                navigate("/dashboard/users-reports");
-                onClose();
-              }}
-              className="px-4 py-2 rounded-md hover:bg-gray-100 hover:text-[#49293e] transition cursor-pointer"
-            >
-              Users
-            </div>
+        {/* DIVIDER */}
+        <div className="mx-4 h-px bg-linear-to-r from-transparent via-gray-200 to-transparent mb-2" />
 
-            <div
-              onClick={() => {
-                navigate("/dashboard/customers-reports");
-                onClose();
-              }}
-              className="px-4 py-2 rounded-md hover:bg-gray-100 hover:text-[#49293e] transition cursor-pointer"
-            >
-              Customers
+        {/* MENU */}
+        <div className="flex flex-col flex-1 overflow-y-auto py-2 px-3 gap-0.5">
+
+          <SidebarItem
+            icon={<LayoutDashboard size={17} />}
+            label="Dashboard"
+            onClick={() => { navigate("/dashboard"); onClose(); }}
+            active={isActive("/dashboard")}
+          />
+
+          <SidebarDropdown icon={<Package size={17} />} label="Master">
+            {navItem("/dashboard/users", "Users")}
+            {navItem("/dashboard/customers", "Customers")}
+          </SidebarDropdown>
+
+          <SidebarDropdown icon={<BarChart3 size={17} />} label="Reports">
+            <SidebarDropdown icon={<Package size={17} />} label="General">
+              {navItem("/dashboard/users-reports", "Users")}
+              {navItem("/dashboard/customers-reports", "Customers")}
+            </SidebarDropdown>
+            <div className="px-4 py-2 text-sm text-gray-500 hover:text-[#49293e] hover:bg-gray-100 rounded-lg cursor-pointer transition">
+              Stock Report
             </div>
           </SidebarDropdown>
 
-          <div className="px-6 py-2 hover:text-[#49293e] cursor-pointer text-sm">
-            Stock Report
-          </div>
-        </SidebarDropdown>
+          <SidebarItem
+            icon={<Settings size={17} />}
+            label="Settings"
+            onClick={() => { navigate("/dashboard/settings"); onClose(); }}
+            active={isActive("/dashboard/settings")}
+          />
+        </div>
 
-        {/* Settings */}
-        <SidebarItem
-          icon={<Settings size={18} />}
-          label="Settings"
-          onClick={() => {
-            navigate("/dashboard/settings");
-            onClose();
-          }}
-        />
+        {/* BOTTOM VERSION TAG */}
+        <div className="px-4 py-3 border-t border-gray-100">
+          <p className="text-[10px] text-gray-300 text-center tracking-wider uppercase">
+            v1.0.0 · Bitezo Admin
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

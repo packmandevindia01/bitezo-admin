@@ -12,6 +12,8 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
     "@tailwindcss/vite": "^4.2.2",
+    "axios": "^1.13.6",
+    "exceljs": "^4.4.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "libphonenumber-js": "^1.12.40",

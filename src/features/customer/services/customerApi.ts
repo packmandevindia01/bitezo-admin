@@ -1,100 +1,38 @@
+// src/features/customer/services/customerApi.ts
+import api from "../../../utils/api";
 import type { CustomerFormData } from "../types";
 
 // ✅ CREATE
 export const createCustomer = async (data: CustomerFormData) => {
-  const res = await fetch("http://84.255.173.131:8088/api/admin/customer", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      accept: "*/*",
-    },
-    body: JSON.stringify(data),
-  });
-
-  const result = await res.json();
-
-  if (!res.ok || result.success === false) {
-    throw new Error(result.message || "Failed to create customer");
-  }
-
-  return result;
+  const response = await api.post("/api/admin/customer", data);
+  return response.data;
 };
 
 // ✅ GET ALL
 export const getCustomers = async () => {
-  const res = await fetch(
-    "http://84.255.173.131:8088/api/admin/customer/list"
-  );
-
-  const result = await res.json();
-
-  if (!res.ok) {
-    throw new Error(result.message || "Failed to fetch customers");
-  }
-
-  return result;
+  const response = await api.get("/api/admin/customer/list");
+  return response.data;
 };
 
-// ✅ GET BY ID (🔥 IMPORTANT FOR EDIT)
+// ✅ GET BY ID
 export const getCustomerById = async (id: number) => {
-  const res = await fetch(
-    `http://84.255.173.131:8088/api/admin/customer/${id}`
-  );
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data.message || "Failed to fetch customer");
-  }
-
-  return data; // full customer object
+  const response = await api.get(`/api/admin/customer/${id}`);
+  return response.data;
 };
 
 // ✅ GET NEXT REG ID
 export const getNextRegId = async (): Promise<string> => {
-  const res = await fetch(
-    "http://84.255.173.131:8088/api/admin/customer/nextregid"
-  );
-
-  const data = await res.json();
-
-  if (!data.success) {
-    throw new Error("Failed to fetch Registration ID");
-  }
-
-  return data.data;
+  const response = await api.get("/api/admin/customer/nextregid");
+  return response.data.data;
 };
 
 // ✅ UPDATE
+// Note: backend may return plain text on errors (e.g. "ID mismatch")
+// Axios handles this gracefully — non-2xx responses throw via the interceptor
 export const updateCustomer = async (
   id: number,
   data: CustomerFormData & { custId: number }
 ) => {
-  const res = await fetch(
-    `http://84.255.173.131:8088/api/admin/customer/${id}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        accept: "*/*",
-      },
-      body: JSON.stringify(data),
-    }
-  );
-
-  // ⚠️ backend sometimes returns plain text (like "ID mismatch")
-  let result;
-  const text = await res.text();
-
-  try {
-    result = JSON.parse(text);
-  } catch {
-    result = { message: text };
-  }
-
-  if (!res.ok) {
-    throw new Error(result.message || "Failed to update customer");
-  }
-
-  return result;
+  const response = await api.put(`/api/admin/customer/${id}`, data);
+  return response.data;
 };

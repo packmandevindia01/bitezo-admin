@@ -56,7 +56,7 @@ const ReportFilters = ({ values, onChange, onReset }: Props) => {
       options: [
         { label: "All", value: "All" },
         { label: "Demo", value: "Demo" },
-        { label: "Live", value: "Live" },
+        { label: "Licenced", value: "Licenced" },
       ],
     },
   ];

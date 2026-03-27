@@ -15,10 +15,8 @@ const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 🔥 Basic validation
     if (!email || !password) {
       showToast("Please enter username and password", "error");
-       
       return;
     }
 
@@ -27,28 +25,35 @@ const LoginForm = () => {
 
       const data = await loginApi(email, password);
 
-      if (data?.userId) {
-        // ✅ Save login
-        localStorage.setItem("userId", data.userId);
-
-        showToast("Login successful 🎉", "success");
-
-        navigate("/dashboard");
-      } else {
-        // ❌ Invalid credentials
-        showToast("Invalid username or password ❌", "error");
-
-        // 🔥 Clear fields
-        setEmail("");
-        setPassword("");
+      // ✅ Check token exists
+      if (!data?.accessToken) {
+        throw new Error("Login failed");
       }
+
+      // 🚨 Check user active
+      if (!data.user.isActive) {
+        showToast("User is inactive ❌", "error");
+        setLoading(false);
+        return;
+      }
+
+      // ✅ SAVE HERE (THIS IS YOUR QUESTION)
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      localStorage.setItem("user", JSON.stringify({
+        userId: data.user.userId,
+        userName: data.user.userName
+      }));
+
+      showToast("Login successful 🎉", "success");
+
+      navigate("/dashboard");
 
     } catch (error) {
       console.error(error);
 
-      showToast("Login failed. Try again ❌", "error");
+      showToast("Invalid username or password ❌", "error");
 
-      // 🔥 Clear fields
       setEmail("");
       setPassword("");
     } finally {
@@ -94,7 +99,7 @@ const LoginForm = () => {
       <Button type="submit" size="lg" fullWidth disabled={loading} >
         {loading ? "Logging in..." : "Login"}
       </Button>
-      
+
     </form>
   );
 };

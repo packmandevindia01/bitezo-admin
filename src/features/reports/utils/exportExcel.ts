@@ -1,72 +1,72 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { formatDate } from "./reportHelpers";
 
-export const generateExcel = (
+export const generateExcel = async (
   title: string,
   columns: string[],
   rows: any[][],
   fileName: string
 ) => {
   const formattedDate = formatDate(new Date());
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Report");
 
-  const data = [
-    [title],
-    [`Date: ${formattedDate}`],
-    [],
-    columns,
-    ...rows,
-  ];
+  const lastCol = columns.length;
 
-  const ws = XLSX.utils.aoa_to_sheet(data);
+  // ✅ TITLE ROW
+  ws.addRow([title]);
+  ws.mergeCells(1, 1, 1, lastCol);
+  const titleCell = ws.getCell("A1");
+  titleCell.font = { bold: true, size: 14, name: "Arial" };
+  titleCell.alignment = { horizontal: "center", vertical: "middle" };
+  ws.getRow(1).height = 28;
 
-  const range = XLSX.utils.decode_range(ws["!ref"] || "");
-  const lastCol = columns.length - 1;
+  // ✅ DATE ROW
+  ws.addRow([`Date: ${formattedDate}`]);
+  ws.mergeCells(2, 1, 2, lastCol);
+  const dateCell = ws.getCell("A2");
+  dateCell.font = { size: 11, name: "Arial" };
+  dateCell.alignment = { horizontal: "center", vertical: "middle" };
+  ws.getRow(2).height = 20;
 
-  // 🔥 MERGE TITLE + DATE ACROSS ALL COLUMNS
-  ws["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } }, // Title row
-    { s: { r: 1, c: 0 }, e: { r: 1, c: lastCol } }, // Date row
-  ];
+  // ✅ EMPTY ROW
+  ws.addRow([]);
 
-  for (let R = range.s.r; R <= range.e.r; ++R) {
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-
-      if (!ws[cellRef]) continue;
-
-      const isHeader = R === 3;
-
-      ws[cellRef].s = {
-        alignment: {
-          horizontal: "center",
-          vertical: "center",
-        },
-        font: {
-          bold: isHeader,
-        },
-      };
-    }
-  }
-
-  // 🔥 TITLE STYLE
-  if (ws["A1"]) {
-    ws["A1"].s = {
-      font: { bold: true, sz: 14 },
-      alignment: { horizontal: "center", vertical: "center" },
+  // ✅ HEADER ROW (row 4)
+  const headerRow = ws.addRow(columns);
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, size: 11, name: "Arial" };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE8D5C4" }, // light brand color
     };
-  }
+  });
+  headerRow.height = 22;
 
-  // 🔥 DATE STYLE
-  if (ws["A2"]) {
-    ws["A2"].s = {
-      alignment: { horizontal: "center", vertical: "center" },
-    };
-  }
+  // ✅ DATA ROWS
+  rows.forEach((row) => {
+    const dataRow = ws.addRow(row);
+    dataRow.eachCell((cell) => {
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.font = { size: 10, name: "Arial" };
+    });
+    dataRow.height = 18;
+  });
 
-  ws["!cols"] = columns.map(() => ({ wch: 20 }));
+  // ✅ COLUMN WIDTHS
+  ws.columns = columns.map(() => ({ width: 22 }));
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Report");
-
-  XLSX.writeFile(wb, `${fileName}.xlsx`);
+  // ✅ DOWNLOAD
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${fileName}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
 };

@@ -19,7 +19,7 @@ const ReportHeader = ({
       </h2>
 
       {onSearchChange && (
-        <div className="w-full sm:w-[300px]">
+        <div className="w-full sm:w-75">
           <SearchBar
             value={searchValue || ""}
             onChange={(value) => onSearchChange(value)}
