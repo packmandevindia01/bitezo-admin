@@ -21,6 +21,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+
 // ── Response interceptor: try refresh on 401, else logout ───────────────────
 api.interceptors.response.use(
   (response) => response,
@@ -30,10 +31,14 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      try {
-        const refreshToken = store.getState().auth.refreshToken;
+      const refreshToken = store.getState().auth.refreshToken;
 
-        // Call refresh endpoint with refreshToken as Bearer
+      // ✅ If no refresh token (e.g. login page), just reject — don't redirect
+      if (!refreshToken) {
+        return Promise.reject(error);
+      }
+
+      try {
         const response = await axios.post(
           `${BASE_URL}/api/CompanyAuth/refresh`,
           {},
@@ -47,7 +52,6 @@ api.interceptors.response.use(
         const newAccessToken = response.data.accessToken;
         const currentState = store.getState().auth;
 
-        // Save new accessToken to Redux + localStorage
         store.dispatch(
           setCredentials({
             accessToken: newAccessToken,
@@ -56,20 +60,18 @@ api.interceptors.response.use(
           })
         );
 
-        // Retry original request with new token
         originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         return api(originalRequest);
 
       } catch {
-        // Refresh failed → force logout
+        // ✅ Only redirect if user was previously logged in
         store.dispatch(clearCredentials());
         window.location.href = "/";
         return Promise.reject(error);
       }
     }
 
-    // For non-401 errors, preserve your original error format
-    throw new Error(`API Error: ${error.response?.status ?? "Network Error"}`);
+    return Promise.reject(error);
   }
 );
 

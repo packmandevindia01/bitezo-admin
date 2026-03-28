@@ -5,7 +5,6 @@ import { loginApi } from "../services/authApi";
 import { useToast } from "../../../context/ToastContext";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../../../store/authSlice";
-
 import type { AppDispatch } from "../../../store/store";
 
 const LoginForm = () => {
@@ -17,25 +16,33 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 👇 add error state
+  const [errors, setErrors] = useState({ email: "", password: "" });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      showToast("Please enter username and password", "error");
-      return;
+    // 👇 inline validation
+    const newErrors = { email: "", password: "" };
+    if (!email.trim()) newErrors.email = "Username is required";
+    if (!password.trim()) newErrors.password = "Password is required";
+
+    if (newErrors.email || newErrors.password) {
+      setErrors(newErrors);
+      return; // 👈 no toast needed, inline errors show
     }
+
+    setErrors({ email: "", password: "" });
 
     try {
       setLoading(true);
 
       const data = await loginApi(email, password);
 
-      // ✅ Check token exists
       if (!data?.accessToken) {
         throw new Error("Login failed");
       }
 
-      // ✅ Save tokens and user info
       dispatch(setCredentials({
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
@@ -43,18 +50,19 @@ const LoginForm = () => {
           userId: data.user.userId,
           userName: data.user.userName,
         },
-      }))
+      }));
 
       showToast("Login successful 🎉", "success");
-
       navigate("/dashboard");
 
     } catch (error: any) {
       console.error(error);
 
-      // Show backend error message if available, otherwise generic message
       const message =
-        error?.response?.data?.message || "Invalid username or password ❌";
+        error?.response?.data?.message
+        || error?.message
+        || "Invalid username or password";
+
       showToast(message, "error");
 
       setEmail("");
@@ -79,7 +87,11 @@ const LoginForm = () => {
         type="text"
         placeholder="Username"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(e) => {
+          setEmail(e.target.value);
+          setErrors((prev) => ({ ...prev, email: "" })); // 👈 clear on type
+        }}
+        error={errors.email} // 👈 show inline error
       />
 
       {/* PASSWORD */}
@@ -87,7 +99,11 @@ const LoginForm = () => {
         type="password"
         placeholder="Password"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(e) => {
+          setPassword(e.target.value);
+          setErrors((prev) => ({ ...prev, password: "" })); // 👈 clear on type
+        }}
+        error={errors.password} // 👈 show inline error
       />
 
       {/* FORGOT PASSWORD */}

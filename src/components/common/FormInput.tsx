@@ -31,7 +31,7 @@ const FormInput = ({
   onKeyDown,
   error,
   disabled,
-  readOnly, // ✅ add here
+  readOnly,
   autoComplete,
   autoFocus,
 }: Props) => {
@@ -61,21 +61,19 @@ const FormInput = ({
         onBlur={onBlur}
         onKeyDown={onKeyDown}
         disabled={disabled}
-        readOnly={readOnly} // ✅ THIS FIXES EVERYTHING
+        readOnly={readOnly}
         autoComplete={autoComplete}
         autoFocus={autoFocus}
         placeholder={placeholder || (required ? "Enter value" : "")}
         className={`
-    w-full px-3 md:px-4 py-2
-    text-sm md:text-base
-    rounded-md border outline-none transition
-
-    ${error ? "border-red-500" : "border-gray-300"}
-    ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
-    ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}  // ✅ optional UX
-
-    focus: focus:border-[#49293e]
-  `}
+          w-full px-3 md:px-4 py-2
+          text-sm md:text-base
+          rounded-md border outline-none transition
+          ${error ? "border-red-500 bg-red-50" : "border-gray-300"}
+          ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
+          ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}
+          focus:border-[#49293e]
+        `}
       />
 
       {/* ERROR */}
