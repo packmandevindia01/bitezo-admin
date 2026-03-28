@@ -14,37 +14,44 @@ import CustomerList from "../features/customer/pages/CustomerListPage";
 import CustomerReportPage from "../features/reports/pages/CustomerReportPage";
 import UserReportPage from "../features/reports/pages/UserReportPage";
 import ProtectedRoute from "./ProtectedRoute";
+import NotFoundPage from "../pages/NotFoundPage"; // 👈 add this (adjust path if needed)
 
 const AppRoutes = () => {
   return (
     <BrowserRouter>
-  <Routes>
+      <Routes>
 
-    {/* PUBLIC */}
-    <Route path="/" element={<LoginPage />} />
-    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-    <Route path="/verify-otp" element={<VerifyOtpPage />} />
-    <Route path="/reset-password" element={<ResetPasswordPage />} />
+        {/* PUBLIC */}
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/verify-otp" element={<VerifyOtpPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-    {/* ✅ PROTECTED */}
-    <Route element={<ProtectedRoute />}>
-      <Route path="/dashboard" element={<MainLayout />}>
-        <Route index element={<DashboardPage />} />
+        {/* PROTECTED */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<MainLayout />}>
+            <Route index element={<DashboardPage />} />
 
-        <Route path="customers" element={<CustomerList />} />
-        <Route path="customers/create" element={<CompanyRegistrationPage />} />
-        <Route path="customers/edit/:id" element={<CompanyRegistrationPage />} />
+            <Route path="customers" element={<CustomerList />} />
+            <Route path="customers/create" element={<CompanyRegistrationPage />} />
+            <Route path="customers/edit/:id" element={<CompanyRegistrationPage />} />
 
-        <Route path="users" element={<UserList />} />
-        <Route path="user/create" element={<UserCreationPage />} />
+            <Route path="users" element={<UserList />} />
+            <Route path="user/create" element={<UserCreationPage />} />
 
-        <Route path="customers-reports" element={<CustomerReportPage />} />
-        <Route path="users-reports" element={<UserReportPage />} />
-      </Route>
-    </Route>
+            <Route path="customers-reports" element={<CustomerReportPage />} />
+            <Route path="users-reports" element={<UserReportPage />} />
 
-  </Routes>
-</BrowserRouter>
+            {/* 👇 unknown /dashboard/* routes */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Route>
+
+        {/* 👇 catch all other unknown routes */}
+        <Route path="*" element={<NotFoundPage />} />
+
+      </Routes>
+    </BrowserRouter>
   );
 };
 

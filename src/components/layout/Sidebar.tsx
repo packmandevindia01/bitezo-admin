@@ -1,4 +1,3 @@
-// src/components/layout/Sidebar.tsx
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -6,6 +5,12 @@ import {
   Package,
   Settings,
   X,
+  Users,
+  Building2,
+  UserSquare2,
+  BarChart2,
+  TrendingUp,
+  BoxesIcon,
 } from "lucide-react";
 
 import SidebarItem from "./SidebarItem";
@@ -23,17 +28,20 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navItem = (path: string, label: string) => (
+  const navItem = (path: string, label: string, icon: React.ReactNode) => (
     <div
       onClick={() => { navigate(path); onClose(); }}
       className={`
-        px-4 py-2 rounded-lg cursor-pointer text-sm font-medium transition-all duration-150
+        flex items-center gap-2.5 px-4 py-2 rounded-lg cursor-pointer text-sm font-medium transition-all duration-150
         ${isActive(path)
           ? "bg-[#49293e]/10 text-[#49293e] font-semibold"
           : "text-gray-500 hover:bg-gray-100 hover:text-[#49293e]"
         }
       `}
     >
+      <span className={`shrink-0 ${isActive(path) ? "text-[#49293e]" : "text-gray-400"}`}>
+        {icon}
+      </span>
       {label}
     </div>
   );
@@ -104,16 +112,17 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
           />
 
           <SidebarDropdown icon={<Package size={17} />} label="Master">
-            {navItem("/dashboard/users", "Users")}
-            {navItem("/dashboard/customers", "Customers")}
+            {navItem("/dashboard/users", "Users", <Users size={15} />)}
+            {navItem("/dashboard/customers", "Customers", <Building2 size={15} />)}
           </SidebarDropdown>
 
           <SidebarDropdown icon={<BarChart3 size={17} />} label="Reports">
-            <SidebarDropdown icon={<Package size={17} />} label="General">
-              {navItem("/dashboard/users-reports", "Users")}
-              {navItem("/dashboard/customers-reports", "Customers")}
+            <SidebarDropdown icon={<TrendingUp size={15} />} label="General">
+              {navItem("/dashboard/users-reports", "Users", <UserSquare2 size={15} />)}
+              {navItem("/dashboard/customers-reports", "Customers", <BarChart2 size={15} />)}
             </SidebarDropdown>
-            <div className="px-4 py-2 text-sm text-gray-500 hover:text-[#49293e] hover:bg-gray-100 rounded-lg cursor-pointer transition">
+            <div className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-500 hover:text-[#49293e] hover:bg-gray-100 rounded-lg cursor-pointer transition">
+              <BoxesIcon size={15} className="text-gray-400 shrink-0" />
               Stock Report
             </div>
           </SidebarDropdown>
@@ -124,6 +133,7 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
             onClick={() => { navigate("/dashboard/settings"); onClose(); }}
             active={isActive("/dashboard/settings")}
           />
+
         </div>
 
         {/* BOTTOM VERSION TAG */}
