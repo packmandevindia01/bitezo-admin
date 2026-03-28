@@ -1,6 +1,6 @@
 // src/features/user/services/userApi.ts
 import api from "../../../utils/api";
-import type { CreateUserPayload, CreateUserResponse, User } from "../types";
+import type { CreateUserPayload, CreateUserResponse,UpdateUserPayload, User } from "../types";
 
 // ✅ CREATE USER
 export const createUser = async (
@@ -24,14 +24,20 @@ export const getUsers = async (): Promise<User[]> => {
 };
 
 // ✅ UPDATE USER
-export const updateUser = async (data: {
-  userId: number;
-  userName: string;
-  password: string;
-  email: string;
-  isActive: boolean;
-  isMaster: boolean;
-}) => {
+export const updateUser = async (
+  data: UpdateUserPayload
+): Promise<CreateUserResponse> => {
   const response = await api.put("/api/admin/user", data);
+  return response.data;
+};
+
+export const changePassword = async (
+  userId: number,
+  data: { currentPassword: string; newPassword: string }
+): Promise<void> => {
+  const response = await api.put(
+    `/api/admin/user/${userId}/update-password`,
+    data
+  );
   return response.data;
 };

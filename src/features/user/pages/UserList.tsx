@@ -1,11 +1,9 @@
-// src/features/user/pages/UserList.tsx
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import type { RootState, AppDispatch } from "../../../store/store";
 import { fetchUsers } from "../../../store/userSlice";
-
-import {  updateUser } from "../services/userApi";
+import { updateUser, changePassword, createUser } from "../services/userApi";
 import { useToast } from "../../../context/ToastContext";
 
 import { Loader, Button, Modal } from "../../../components/common";
@@ -13,7 +11,7 @@ import UserTable from "../components/UserTable";
 import UserForm from "../components/UserForm";
 import PasswordChangeForm from "../components/PasswordChangeForm";
 
-import type { User } from "../types";
+import type { User, CreateUserPayload } from "../types";
 
 const UserList = () => {
   const { showToast } = useToast();
@@ -24,48 +22,52 @@ const UserList = () => {
   );
 
   const [editUser, setEditUser] = useState<User | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false); // 👈 new
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [passwordUser, setPasswordUser] = useState<User | null>(null);
-
-  // modal visibility
-  const [editOpen, setEditOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchUsers());
   }, [dispatch]);
 
-  // ── EDIT USER (no password) ───────────────────────────────────────────────
-  const handleSave = async (data: any) => {
+  // ── CREATE USER ───────────────────────────────────────────────────────────
+  const handleCreate = async (data: any) => {
     try {
-      const payload = {
-        userId: editUser?.id || 0,
+      const payload: CreateUserPayload = {
         userName: data.name.trim(),
-        password: "", // not changed here
+        password: data.password,
         email: data.email.trim(),
         isActive: data.active,
         isMaster: data.isMaster,
       };
+      await createUser(payload);
+      showToast("User created successfully 🎉", "success");
+      dispatch(fetchUsers());
+      setCreateOpen(false);
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || "Failed to create ❌", "error");
+    }
+  };
 
-      if (editUser) {
-        await updateUser(payload);
-        showToast("User updated successfully ✏️", "success");
-      } else {
-        // Create needs password — handled in UserCreationPage
-        showToast("User created successfully 🎉", "success");
-      }
-
+  // ── EDIT USER ─────────────────────────────────────────────────────────────
+  const handleEditSubmit = async (data: any) => {
+    if (!editUser) return;
+    try {
+      await updateUser({
+        userId: editUser.id,
+        userName: data.name.trim(),
+        email: data.email.trim(),
+        isActive: data.active,
+        isMaster: data.isMaster,
+      });
+      showToast("User updated successfully ✏️", "success");
       dispatch(fetchUsers());
       setEditOpen(false);
       setEditUser(null);
     } catch (err: any) {
-      const message = err.message || "Something went wrong";
-      if (message.includes("Conflict detected on:")) {
-        const field = message.split(":")[1]?.trim();
-        showToast(`${field} already exists ❌`, "error");
-      } else {
-        showToast(message + " ❌", "error");
-      }
+      showToast(err?.response?.data?.message || "Failed to update ❌", "error");
     }
   };
 
@@ -75,28 +77,22 @@ const UserList = () => {
     newPassword: string;
   }) => {
     try {
-      // Adjust this payload to match your backend's change-password endpoint
-      await updateUser({
-        userId: passwordUser!.id,
-        userName: passwordUser!.name,
-        password: data.newPassword,
-        email: passwordUser!.email,
-        isActive: passwordUser!.active,
-        isMaster: passwordUser!.isMaster,
+      await changePassword(passwordUser!.id, {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
       });
-
       showToast("Password updated successfully 🔑", "success");
       setPasswordOpen(false);
       setPasswordUser(null);
     } catch (err: any) {
-      showToast(err.message || "Failed to update password ❌", "error");
+      showToast(err?.response?.data?.message || "Failed to update password ❌", "error");
     }
   };
 
   // ── DELETE ────────────────────────────────────────────────────────────────
   const confirmDelete = () => {
     if (deleteId !== null) {
-      showToast("User deleted (UI only) ⚠️", "info");
+      showToast("User deleted ⚠️", "info");
       dispatch(fetchUsers());
       setDeleteId(null);
     }
@@ -110,38 +106,43 @@ const UserList = () => {
         </div>
       )}
 
-      {/* ── USER TABLE ── */}
+      {/* USER TABLE */}
       <UserTable
         users={users}
-        onEdit={(user) => {
-          setEditUser(user);
-          setEditOpen(true);
-        }}
+        onEdit={(user) => { setEditUser(user); setEditOpen(true); }}
         onDelete={(id) => setDeleteId(id)}
-        onChangePassword={(user) => {
-          setPasswordUser(user);
-          setPasswordOpen(true);
-        }}
-        onAdd={() => {
-          setEditUser(null);
-          setEditOpen(true);
-        }}
+        onChangePassword={(user) => { setPasswordUser(user); setPasswordOpen(true); }}
+        onAdd={() => setCreateOpen(true)} // 👈 opens modal instead of page
       />
 
-      {/* ── EDIT MODAL (no password fields) ── */}
+      {/* CREATE MODAL */}
       <Modal
-        isOpen={editOpen}
-        onClose={() => setEditOpen(false)}
-        title={editUser ? "Edit User" : "Add User"}
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Add User"
       >
         <UserForm
-          initialData={editUser}
-          onSubmit={handleSave}
-          onCancel={() => setEditOpen(false)}
+          onSubmit={handleCreate}
+          onCancel={() => setCreateOpen(false)}
+          isEdit={false}
         />
       </Modal>
 
-      {/* ── CHANGE PASSWORD MODAL ── */}
+      {/* EDIT MODAL */}
+      <Modal
+        isOpen={editOpen}
+        onClose={() => { setEditOpen(false); setEditUser(null); }}
+        title={`Edit User — ${editUser?.name ?? ""}`}
+      >
+        <UserForm
+          initialData={editUser}
+          onSubmit={handleEditSubmit}
+          onCancel={() => { setEditOpen(false); setEditUser(null); }}
+          isEdit={true}
+        />
+      </Modal>
+
+      {/* CHANGE PASSWORD MODAL */}
       <Modal
         isOpen={passwordOpen}
         onClose={() => setPasswordOpen(false)}
@@ -153,7 +154,7 @@ const UserList = () => {
         />
       </Modal>
 
-      {/* ── DELETE CONFIRM MODAL ── */}
+      {/* DELETE CONFIRM MODAL */}
       <Modal
         isOpen={deleteId !== null}
         onClose={() => setDeleteId(null)}
