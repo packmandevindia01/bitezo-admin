@@ -34,7 +34,7 @@ export const getCustomerReport = async (
       params: {
         country: params.country || "All",
         isDemo: params.isDemo || "All",
-        conMode: params.conMode || "All",
+        conMode: params.conMode === "All" ? "All" : params.conMode?.toLowerCase(), // 👈 normalize casing
         ...(params.custName && { custName: params.custName }),
         ...(params.regId && { regId: params.regId }),
         ...(params.database && { database: params.database }),

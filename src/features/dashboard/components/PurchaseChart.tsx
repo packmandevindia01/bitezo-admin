@@ -9,12 +9,15 @@ import {
   CartesianGrid,
   Cell,
 } from "recharts";
+import { useState } from "react";
 import type { MonthCount } from "../services/dashboardApi";
 
 interface Props {
   data: MonthCount[];
   loading?: boolean;
 }
+
+type Range = 6 | 12;
 
 // Format "2026-01" → "Jan '26"
 const formatMonth = (raw: string) => {
@@ -37,8 +40,38 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+const RangeToggle = ({
+  value,
+  onChange,
+  activeColor,
+}: {
+  value: Range;
+  onChange: (r: Range) => void;
+  activeColor: string;
+}) => (
+  <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+    {([6, 12] as Range[]).map((r) => (
+      <button
+        key={r}
+        onClick={() => onChange(r)}
+        className={`text-xs font-medium px-3 py-1 rounded-md transition-all duration-150 ${
+          value === r
+            ? `bg-white shadow-sm ${activeColor}`
+            : "text-gray-400 hover:text-gray-600"
+        }`}
+      >
+        {r}M
+      </button>
+    ))}
+  </div>
+);
+
 const PurchaseChart = ({ data, loading }: Props) => {
-  const chartData = data.map((d) => ({
+  const [range, setRange] = useState<Range>(12);
+
+  const sliced = data.slice(-range);
+
+  const chartData = sliced.map((d) => ({
     month: formatMonth(d.month),
     count: d.count,
   }));
@@ -51,11 +84,11 @@ const PurchaseChart = ({ data, loading }: Props) => {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="text-sm font-semibold text-gray-800">Customer Acquisition</h3>
-          <p className="text-xs text-gray-400 mt-0.5">New customers over last 12 months</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            New customers · last {range} months
+          </p>
         </div>
-        <span className="text-xs bg-indigo-50 text-indigo-600 font-medium px-3 py-1 rounded-full">
-          12 months
-        </span>
+        <RangeToggle value={range} onChange={setRange} activeColor="text-indigo-600" />
       </div>
 
       {loading ? (

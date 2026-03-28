@@ -6,6 +6,8 @@ import { exportCustomersExcel, exportCustomersPDF } from "../utils/customerRepor
 import { getCustomerReport } from "../services/customerRptListApi";
 import type { CustomerRptListRow, CustomerRptListParams } from "../services/customerRptListApi";
 
+const normalize = (value: string) => value.toLowerCase().trim();
+
 const INITIAL_FILTERS: CustomerRptListParams = {
   custName: "",
   regId: "",
@@ -167,16 +169,16 @@ const CustomerReportPage = () => {
               disabled={loading}
             >
               <option value="All">All Countries</option>
-              <option value="IN">India (IN)</option>
-              <option value="AE">UAE (AE)</option>
-              <option value="SA">Saudi Arabia (SA)</option>
-              <option value="BH">Bahrain (BH)</option>
-              <option value="OM">Oman (OM)</option>
-              <option value="QA">Qatar (QA)</option>
-              <option value="KW">Kuwait (KW)</option>
-              <option value="SG">Singapore (SG)</option>
-              <option value="MY">Malaysia (MY)</option>
-              <option value="TH">Thailand (TH)</option>
+              <option value="India">India</option>
+              <option value="UAE">UAE</option>
+              <option value="Saudi Arabia">Saudi Arabia</option>
+              <option value="Bahrain">Bahrain</option>
+              <option value="Oman">Oman</option>
+              <option value="Qatar">Qatar</option>
+              <option value="Kuwait">Kuwait</option>
+              <option value="Singapore">Singapore</option>
+              <option value="Malaysia">Malaysia</option>
+              <option value="Thailand">Thailand</option>
             </select>
           </div>
 

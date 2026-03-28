@@ -1,5 +1,7 @@
 // src/utils/api.ts
 import axios from "axios";
+import { store } from "../store/store";
+import { setCredentials, clearCredentials } from "../store/authSlice";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -10,32 +12,70 @@ const api = axios.create({
   },
 });
 
-// ── Request interceptor: attach Bearer token ──────────────────────────────────
+// ── Request interceptor: attach Bearer token from Redux ──────────────────────
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+  const token = store.getState().auth.accessToken;
   if (token) {
     config.headers["Authorization"] = `Bearer ${token}`;
   }
   return config;
 });
 
-// ── Response interceptor: handle 401 + errors ────────────────────────────────
+// ── Response interceptor: try refresh on 401, else logout ───────────────────
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.clear();
-      window.location.href = "/login";
-      return Promise.resolve(); // same as your apiFetch returning undefined
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = store.getState().auth.refreshToken;
+
+        // Call refresh endpoint with refreshToken as Bearer
+        const response = await axios.post(
+          `${BASE_URL}/api/CompanyAuth/refresh`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${refreshToken}`,
+            },
+          }
+        );
+
+        const newAccessToken = response.data.accessToken;
+        const currentState = store.getState().auth;
+
+        // Save new accessToken to Redux + localStorage
+        store.dispatch(
+          setCredentials({
+            accessToken: newAccessToken,
+            refreshToken: currentState.refreshToken!,
+            user: currentState.user!,
+          })
+        );
+
+        // Retry original request with new token
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
+
+      } catch {
+        // Refresh failed → force logout
+        store.dispatch(clearCredentials());
+        window.location.href = "/";
+        return Promise.reject(error);
+      }
     }
+
+    // For non-401 errors, preserve your original error format
     throw new Error(`API Error: ${error.response?.status ?? "Network Error"}`);
   }
 );
 
 export default api;
 
-// ── apiFetch compatibility shim ───────────────────────────────────────────────
-// Keeps all existing code that calls apiFetch(url, options) working unchanged.
+// ── apiFetch compatibility shim ──────────────────────────────────────────────
 export const apiFetch = async (
   url: string,
   options: RequestInit = {}

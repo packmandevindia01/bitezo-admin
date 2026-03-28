@@ -5,6 +5,7 @@ import {
   isNumber,
   isValidEmail,
 } from "../../../utils/validators";
+import { mapCountry } from "../utils/countryMapper"; // 👈 add this
 
 export const validateCustomer = (form: CustomerFormData) => {
   const errors: Partial<Record<keyof CustomerFormData, string>> = {};
@@ -15,11 +16,14 @@ export const validateCustomer = (form: CustomerFormData) => {
 
   if (!isRequired(form.custMob)) {
     errors.custMob = "Mobile number is required";
-  } else if (form.custMob.trim() !== "-" && !isValidMobile(form.custMob, form.country)) {
-    // ✅ skip validation if placeholder "-", validate otherwise
+  } else if (
+    form.custMob.trim() !== "-" &&
+    !isValidMobile(form.custMob, mapCountry(form.country)) // 👈 convert here
+  ) {
     errors.custMob = "Invalid mobile number";
   }
 
+  // rest stays exactly the same...
   if (!isRequired(form.country)) {
     errors.country = "Country is required";
   }

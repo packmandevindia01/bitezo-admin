@@ -3,10 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { FormInput, Button } from "../../../components/common";
 import { loginApi } from "../services/authApi";
 import { useToast } from "../../../context/ToastContext";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../../../store/authSlice";
+
+import type { AppDispatch } from "../../../store/store";
 
 const LoginForm = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const dispatch = useDispatch<AppDispatch>();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,29 +35,27 @@ const LoginForm = () => {
         throw new Error("Login failed");
       }
 
-      // 🚨 Check user active
-      if (!data.user.isActive) {
-        showToast("User is inactive ❌", "error");
-        setLoading(false);
-        return;
-      }
-
-      // ✅ SAVE HERE (THIS IS YOUR QUESTION)
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
-      localStorage.setItem("user", JSON.stringify({
-        userId: data.user.userId,
-        userName: data.user.userName
-      }));
+      // ✅ Save tokens and user info
+      dispatch(setCredentials({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        user: {
+          userId: data.user.userId,
+          userName: data.user.userName,
+        },
+      }))
 
       showToast("Login successful 🎉", "success");
 
       navigate("/dashboard");
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
 
-      showToast("Invalid username or password ❌", "error");
+      // Show backend error message if available, otherwise generic message
+      const message =
+        error?.response?.data?.message || "Invalid username or password ❌";
+      showToast(message, "error");
 
       setEmail("");
       setPassword("");
@@ -96,10 +99,9 @@ const LoginForm = () => {
       </p>
 
       {/* BUTTON */}
-      <Button type="submit" size="lg" fullWidth disabled={loading} >
+      <Button type="submit" size="lg" fullWidth disabled={loading}>
         {loading ? "Logging in..." : "Login"}
       </Button>
-
     </form>
   );
 };

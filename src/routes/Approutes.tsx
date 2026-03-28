@@ -13,33 +13,38 @@ import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import CustomerList from "../features/customer/pages/CustomerListPage";
 import CustomerReportPage from "../features/reports/pages/CustomerReportPage";
 import UserReportPage from "../features/reports/pages/UserReportPage";
+import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* LOGIN */}
-        <Route path="/" element={<LoginPage />} />
+  <Routes>
 
-        <Route path="/dashboard" element={<MainLayout />}>
-          <Route index element={<DashboardPage />} />
+    {/* PUBLIC */}
+    <Route path="/" element={<LoginPage />} />
+    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+    <Route path="/verify-otp" element={<VerifyOtpPage />} />
+    <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-          <Route path="customers" element={<CustomerList />} />
-          <Route path="customers/create" element={<CompanyRegistrationPage />} />
-          <Route path="customers/edit/:id" element={<CompanyRegistrationPage />} />  {/* ✅ relative */}
+    {/* ✅ PROTECTED */}
+    <Route element={<ProtectedRoute />}>
+      <Route path="/dashboard" element={<MainLayout />}>
+        <Route index element={<DashboardPage />} />
 
-          <Route path="users" element={<UserList />} />
-          <Route path="user/create" element={<UserCreationPage />} />
+        <Route path="customers" element={<CustomerList />} />
+        <Route path="customers/create" element={<CompanyRegistrationPage />} />
+        <Route path="customers/edit/:id" element={<CompanyRegistrationPage />} />
 
-          <Route path="customers-reports" element={<CustomerReportPage />} />  {/* ✅ relative */}
-          <Route path="users-reports" element={<UserReportPage />} />           {/* ✅ relative, fixed typo */}
-        </Route>
+        <Route path="users" element={<UserList />} />
+        <Route path="user/create" element={<UserCreationPage />} />
 
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/verify-otp" element={<VerifyOtpPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-      </Routes>
-    </BrowserRouter>
+        <Route path="customers-reports" element={<CustomerReportPage />} />
+        <Route path="users-reports" element={<UserReportPage />} />
+      </Route>
+    </Route>
+
+  </Routes>
+</BrowserRouter>
   );
 };
 

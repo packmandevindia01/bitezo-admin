@@ -15,7 +15,7 @@ const isTokenValid = () => {
 const ProtectedRoute = () => {
   if (!isTokenValid()) {
     localStorage.clear();
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;

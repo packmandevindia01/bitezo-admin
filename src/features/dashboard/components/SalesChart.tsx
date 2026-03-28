@@ -8,12 +8,15 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import { useState } from "react";
 import type { MonthCount } from "../services/dashboardApi";
 
 interface Props {
   data: MonthCount[];
   loading?: boolean;
 }
+
+type Range = 6 | 12;
 
 const formatMonth = (raw: string) => {
   const [year, month] = raw.split("-");
@@ -35,8 +38,36 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+const RangeToggle = ({
+  value,
+  onChange,
+}: {
+  value: Range;
+  onChange: (r: Range) => void;
+}) => (
+  <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+    {([6, 12] as Range[]).map((r) => (
+      <button
+        key={r}
+        onClick={() => onChange(r)}
+        className={`text-xs font-medium px-3 py-1 rounded-md transition-all duration-150 ${
+          value === r
+            ? "bg-white text-emerald-600 shadow-sm"
+            : "text-gray-400 hover:text-gray-600"
+        }`}
+      >
+        {r}M
+      </button>
+    ))}
+  </div>
+);
+
 const SalesChart = ({ data, loading }: Props) => {
-  const chartData = data.map((d) => ({
+  const [range, setRange] = useState<Range>(12);
+
+  const sliced = data.slice(-range);
+
+  const chartData = sliced.map((d) => ({
     month: formatMonth(d.month),
     count: d.count,
   }));
@@ -54,15 +85,15 @@ const SalesChart = ({ data, loading }: Props) => {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="text-sm font-semibold text-gray-800">Cumulative Customers</h3>
-          <p className="text-xs text-gray-400 mt-0.5">Total growth over last 12 months</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Total growth · last {range} months
+          </p>
         </div>
-        <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-3 py-1 rounded-full">
-          12 months
-        </span>
+        <RangeToggle value={range} onChange={setRange} />
       </div>
 
       {loading ? (
-        <div className="h-62.5  bg-gray-50 rounded-xl animate-pulse" />
+        <div className="h-62.5 bg-gray-50 rounded-xl animate-pulse" />
       ) : (
         <ResponsiveContainer width="100%" height={250}>
           <AreaChart data={cumulativeData}>

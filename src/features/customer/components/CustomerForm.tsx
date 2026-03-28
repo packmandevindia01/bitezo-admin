@@ -1,4 +1,4 @@
-import { useState, useEffect,useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
@@ -45,6 +45,19 @@ const initialState: CustomerFormData = {
   filePath: "",
   isDemo: true,
   createdDate: new Date().toISOString(),
+};
+
+const mobilePlaceholders: Record<string, string> = {
+  IN: "+91 9876543210",
+  AE: "+971 501234567",
+  SA: "+966 512345678",
+  BH: "+973 36001234",
+  OM: "+968 92001234",
+  QA: "+974 33001234",
+  KW: "+965 51001234",
+  SG: "+65 91234567",
+  MY: "+60 121234567",
+  TH: "+66 812345678",
 };
 
 
@@ -108,64 +121,64 @@ const CustomerForm = () => {
     setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
- const handleSubmit = async () => {
-  const validationErrors = validateCustomer(form);
+  const handleSubmit = async () => {
+    const validationErrors = validateCustomer(form);
 
-  if (Object.keys(validationErrors).length > 0) {
-    setErrors(validationErrors);
-    showToast("Please fill all required fields ❌", "error");
-    return;
-  }
-
-  setSubmitting(true);
-
-  try {
-    if (isEdit) {
-      await updateCustomer(Number(id), {
-        ...form,
-        custId: Number(id),
-        custMob: formatPhone(form.custMob?.trim() || "", form.country as CountryCode), // ✅ guarded
-      });
-      showToast("Customer updated successfully ✏️", "success");
-    } else {
-      await createCustomer({
-        ...form,
-        custMob: formatPhone(form.custMob?.trim() || "", form.country as CountryCode), // ✅ guarded
-        createdDate: new Date().toISOString(),
-      });
-      showToast("Customer created successfully 🎉", "success");
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      showToast("Please fill all required fields ❌", "error");
+      return;
     }
 
-    dispatch(fetchCustomers());
-    navigate("/dashboard/customers");
+    setSubmitting(true);
 
-  } catch (err: any) {
-    console.error(err);
-
-    let message = err.message || "Something went wrong";
-    showToast(message + " ❌", "error");
-
-    if (message.includes("Conflict detected on:")) {
-      let field = message.split(":")[1]?.trim();
-      const normalizedField = field?.toLowerCase();
-
-      let key: keyof CustomerFormData | undefined;
-
-      if (normalizedField.includes("customer")) key = "custName";
-      else if (normalizedField.includes("email")) key = "email";
-      else if (normalizedField.includes("registration")) key = "regId";
-      else if (normalizedField.includes("mobile")) key = "custMob";
-      else if (normalizedField.includes("cr")) key = "crNo";
-      else if (normalizedField.includes("database")) key = "database";
-
-      if (key) {
-        setErrors((prev) => ({ ...prev, [key]: `${field} already exists` }));
+    try {
+      if (isEdit) {
+        await updateCustomer(Number(id), {
+          ...form,
+          custId: Number(id),
+          custMob: formatPhone(form.custMob?.trim() || "", form.country as CountryCode), // ✅ guarded
+        });
+        showToast("Customer updated successfully ✏️", "success");
+      } else {
+        await createCustomer({
+          ...form,
+          custMob: formatPhone(form.custMob?.trim() || "", form.country as CountryCode), // ✅ guarded
+          createdDate: new Date().toISOString(),
+        });
+        showToast("Customer created successfully 🎉", "success");
       }
+
+      dispatch(fetchCustomers());
+      navigate("/dashboard/customers");
+
+    } catch (err: any) {
+      console.error(err);
+
+      let message = err.message || "Something went wrong";
+      showToast(message + " ❌", "error");
+
+      if (message.includes("Conflict detected on:")) {
+        let field = message.split(":")[1]?.trim();
+        const normalizedField = field?.toLowerCase();
+
+        let key: keyof CustomerFormData | undefined;
+
+        if (normalizedField.includes("customer")) key = "custName";
+        else if (normalizedField.includes("email")) key = "email";
+        else if (normalizedField.includes("registration")) key = "regId";
+        else if (normalizedField.includes("mobile")) key = "custMob";
+        else if (normalizedField.includes("cr")) key = "crNo";
+        else if (normalizedField.includes("database")) key = "database";
+
+        if (key) {
+          setErrors((prev) => ({ ...prev, [key]: `${field} already exists` }));
+        }
+      }
+    } finally {
+      setSubmitting(false);
     }
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
   return (
     <>
       {/* 🔥 FULL SCREEN LOADER */}
@@ -178,14 +191,14 @@ const CustomerForm = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormInput
           label="Customer Name"
-          
+
           required
           autoFocus
           value={form.custName}
           onChange={(e) => handleChange("custName", e.target.value)}
           error={errors.custName}
           disabled={submitting}
-          
+
         />
 
         {<FormInput
@@ -199,20 +212,18 @@ const CustomerForm = () => {
           label="Country"
           required
           value={form.country}
-          onChange={(e) =>
-            handleChange("country", e.target.value as CountryCode)
-          }
+          onChange={(e) => handleChange("country", e.target.value as CountryCode)}
           options={[
-            { label: "India", value: "IN" },
-            { label: "UAE", value: "AE" },
-            { label: "Saudi Arabia", value: "SA" },
-            { label: "Bahrain", value: "BH" },
-            { label: "Oman", value: "OM" },
-            { label: "Qatar", value: "QA" },
-            { label: "Kuwait", value: "KW" },
-            { label: "Singapore", value: "SG" },
-            { label: "Malaysia", value: "MY" },
-            { label: "Thailand", value: "TH" },
+            { label: "India", value: "India" },
+            { label: "UAE", value: "UAE" },
+            { label: "Saudi Arabia", value: "Saudi Arabia" },
+            { label: "Bahrain", value: "Bahrain" },
+            { label: "Oman", value: "Oman" },
+            { label: "Qatar", value: "Qatar" },
+            { label: "Kuwait", value: "Kuwait" },
+            { label: "Singapore", value: "Singapore" },
+            { label: "Malaysia", value: "Malaysia" },
+            { label: "Thailand", value: "Thailand" },
           ]}
           error={errors.country}
           disabled={submitting}
@@ -221,13 +232,7 @@ const CustomerForm = () => {
         <FormInput
           label="Mobile No"
           required
-          placeholder={
-            form.country === "IN"
-              ? "+91 9876543210"
-              : form.country === "AE"
-                ? "+971 501234567"
-                : "+966 512345678"
-          }
+          placeholder={mobilePlaceholders[mapCountry(form.country)] ?? "+91 9876543210"}
           value={form.custMob}
           onChange={(e) => handleChange("custMob", e.target.value)}
           error={errors.custMob}
