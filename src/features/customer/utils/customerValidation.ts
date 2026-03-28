@@ -5,7 +5,7 @@ import {
   isNumber,
   isValidEmail,
 } from "../../../utils/validators";
-import { mapCountry } from "../utils/countryMapper"; // 👈 add this
+import { mapCountry } from "../../../utils/countryMapper"; // 👈 add this
 
 export const validateCustomer = (form: CustomerFormData) => {
   const errors: Partial<Record<keyof CustomerFormData, string>> = {};

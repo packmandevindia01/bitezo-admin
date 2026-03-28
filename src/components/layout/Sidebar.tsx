@@ -11,6 +11,7 @@ import {
   BarChart2,
   TrendingUp,
   BoxesIcon,
+   BriefcaseBusiness
 } from "lucide-react";
 
 import SidebarItem from "./SidebarItem";
@@ -114,12 +115,14 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
           <SidebarDropdown icon={<Package size={17} />} label="Master">
             {navItem("/dashboard/users", "Users", <Users size={15} />)}
             {navItem("/dashboard/customers", "Customers", <Building2 size={15} />)}
+            {navItem("/dashboard/employees", "Employees", <BriefcaseBusiness size={15} />)}
           </SidebarDropdown>
 
           <SidebarDropdown icon={<BarChart3 size={17} />} label="Reports">
             <SidebarDropdown icon={<TrendingUp size={15} />} label="General">
               {navItem("/dashboard/users-reports", "Users", <UserSquare2 size={15} />)}
               {navItem("/dashboard/customers-reports", "Customers", <BarChart2 size={15} />)}
+              {navItem("/dashboard/employees", "Employees", <BriefcaseBusiness size={15} />)}
             </SidebarDropdown>
             <div className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-500 hover:text-[#49293e] hover:bg-gray-100 rounded-lg cursor-pointer transition">
               <BoxesIcon size={15} className="text-gray-400 shrink-0" />

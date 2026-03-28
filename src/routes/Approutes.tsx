@@ -15,6 +15,7 @@ import CustomerReportPage from "../features/reports/pages/CustomerReportPage";
 import UserReportPage from "../features/reports/pages/UserReportPage";
 import ProtectedRoute from "./ProtectedRoute";
 import NotFoundPage from "../pages/NotFoundPage"; // 👈 add this (adjust path if needed)
+import EmployeeList from "../features/employees/pages/EmployeeListPage";
 
 
 const AppRoutes = () => {
@@ -39,6 +40,8 @@ const AppRoutes = () => {
 
             <Route path="users" element={<UserList />} />
             <Route path="user/create" element={<UserCreationPage />} />
+
+            <Route path="employees" element={<EmployeeList />} />
           
 
             <Route path="customers-reports" element={<CustomerReportPage />} />

@@ -20,7 +20,7 @@ import type { CountryCode } from "libphonenumber-js";
 import { validateCustomer } from "../utils/customerValidation";
 import { formatPhone } from "../utils/formatters";
 import { getNextRegId } from "../services/customerApi";
-import { mapCountry } from "../utils/countryMapper";
+import { mapCountry } from "../../../utils/countryMapper";
 
 
 const initialState: CustomerFormData = {
