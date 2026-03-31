@@ -4,11 +4,12 @@ import { COUNTRY_OPTIONS, MOBILE_PLACEHOLDERS } from "../../../constants/formOpt
 import { isRequired, isValidEmail, isValidMobile } from "../../../utils/validators";
 import { mapCountry } from "../../../utils/countryMapper";
 import type { Employee, EmployeeFormData } from "../types";
+import type { SelectOption } from "../../../constants/formOptions";
 
 interface Props {
   initialData?: Employee | null;
   onSubmit: (data: EmployeeFormData) => void;
-  onCancel?: () => void;
+  dealerOptions: SelectOption[];
   onDelete?: () => void;
   isEdit?: boolean;
 }
@@ -18,6 +19,7 @@ const initialState: EmployeeFormData = {
   mobNo: "",
   email: "",
   country: "",
+  dealerId: 0,
   isActive: true,
 };
 
@@ -26,13 +28,14 @@ const createInitialState = (initialData?: Employee | null): EmployeeFormData => 
   mobNo: initialData?.mobNo ?? initialState.mobNo,
   email: initialData?.email ?? initialState.email,
   country: initialData?.country ?? initialState.country,
+  dealerId: initialData?.dealerId ?? initialState.dealerId,
   isActive: initialData?.isActive ?? initialState.isActive,
 });
 
 const EmployeeForm = ({
   initialData,
   onSubmit,
-  onCancel,
+  dealerOptions,
   onDelete,
   isEdit = false,
 }: Props) => {
@@ -70,6 +73,7 @@ const EmployeeForm = ({
     else if (!isValidEmail(form.email)) newErrors.email = "Invalid email";
 
     if (!isRequired(form.country)) newErrors.country = "Country is required";
+    if (!form.dealerId) newErrors.dealerId = "Dealer is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -91,6 +95,16 @@ const EmployeeForm = ({
           value={form.name}
           onChange={(e) => handleChange("name", e.target.value)}
           error={errors.name}
+        />
+
+        <SelectInput
+          label="Dealer"
+          required
+          value={form.dealerId ? String(form.dealerId) : ""}
+          onChange={(e) => handleChange("dealerId", Number(e.target.value))}
+          options={dealerOptions}
+          error={errors.dealerId}
+          placeholder="Select dealer"
         />
 
         <SelectInput
@@ -143,11 +157,6 @@ const EmployeeForm = ({
         {onDelete && (
           <Button variant="danger" onClick={onDelete}>
             Delete
-          </Button>
-        )}
-        {onCancel && (
-          <Button variant="secondary" onClick={onCancel}>
-            Cancel
           </Button>
         )}
       </div>

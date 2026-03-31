@@ -12,8 +12,13 @@ interface Props {
 
 const EmployeeTable = ({ employees, onEdit, onDelete, onAdd }: Props) => {
   const columns: Column<Employee>[] = [
-    { header: "#", accessor: "id" },
+    { header: "#", accessor: "empId" },
     { header: "Name", accessor: "name" },
+    {
+      header: "Dealer",
+      accessor: "dealerId",
+      render: (row) => row.dealer || String(row.dealerId || "-"),
+    },
     { header: "Mobile", accessor: "mobNo", render: (row) => row.mobNo || "-" },
     { header: "Email", accessor: "email", render: (row) => row.email || "-" },
     { header: "Country", accessor: "country" },
@@ -26,7 +31,7 @@ const EmployeeTable = ({ employees, onEdit, onDelete, onAdd }: Props) => {
     },
     {
       header: "Actions",
-      accessor: "id",
+      accessor: "empId",
       render: (row) => (
         <div className="flex items-center gap-2">
           <button
@@ -37,7 +42,7 @@ const EmployeeTable = ({ employees, onEdit, onDelete, onAdd }: Props) => {
             <Pencil size={15} />
           </button>
           <button
-            onClick={() => onDelete(row.id)}
+            onClick={() => onDelete(row.empId)}
             title="Delete"
             className="p-2 rounded-lg text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-all duration-200 hover:scale-110"
           >

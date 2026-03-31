@@ -10,6 +10,11 @@ export interface DealerListParams {
   country?: string;
 }
 
+export interface DealerNameOption {
+  dealerId: number;
+  dealerName: string;
+}
+
 // ── Helper to parse isActive from any backend format ─────────────────────────
 const parseIsActive = (val: unknown): boolean => {
   if (typeof val === "boolean") return val;
@@ -118,4 +123,25 @@ export const updateDealer = async (
 
   const response = await api.put(`/api/admin/dealer/${dealerId}`, payload);
   return response.data;
+};
+
+export const getDealerListName = async (): Promise<DealerNameOption[]> => {
+  const response = await api.get("/api/admin/dealer/listname");
+  const body = response.data;
+  const list = Array.isArray(body)
+    ? body
+    : Array.isArray(body?.data)
+      ? body.data
+      : [];
+
+  return list.map((item: Record<string, unknown>) => ({
+    dealerId:
+      (item.dealerId as number | undefined) ??
+      (item.id as number | undefined) ??
+      0,
+    dealerName:
+      (item.dealerName as string | undefined) ??
+      (item.name as string | undefined) ??
+      "",
+  }));
 };

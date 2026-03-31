@@ -1,10 +1,13 @@
 export interface Employee {
-  id: number;
+  empId: number;
   name: string;
   mobNo: string;
   email: string;
   country: string;
+  dealerId: number;
+  dealer?: string;
   isActive: boolean;
+  createdDate?: string;
 }
 
 export interface EmployeeFormData {
@@ -12,6 +15,7 @@ export interface EmployeeFormData {
   mobNo: string;
   email: string;
   country: string;
+  dealerId: number;
   isActive: boolean;
 }
 
@@ -20,15 +24,18 @@ export interface CreateEmployeePayload {
   mobNo: string;
   email: string;
   country: string;
+  dealerId: number;
   isActive: boolean;
+  createdDate: string;
 }
 
 export interface UpdateEmployeePayload {
-  id: number;
+  empId: number;
   name: string;
   mobNo: string;
   email: string;
   country: string;
+  dealerId: number;
   isActive: boolean;
 }
 
