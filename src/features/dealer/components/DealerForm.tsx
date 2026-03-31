@@ -1,68 +1,83 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormInput, Button, SelectInput, Checkbox } from "../../../components/common";
 import { COUNTRY_OPTIONS, MOBILE_PLACEHOLDERS } from "../../../constants/formOptions";
 import { isRequired, isValidEmail, isValidMobile } from "../../../utils/validators";
 import { mapCountry } from "../../../utils/countryMapper";
-import type { Employee, EmployeeFormData } from "../types";
+import type { Dealer, DealerFormData } from "../types";
 
 interface Props {
-  initialData?: Employee | null;
-  onSubmit: (data: EmployeeFormData) => void;
+  initialData?: Dealer | null;
+  onSubmit: (data: DealerFormData) => void | Promise<void>;
   onCancel?: () => void;
-  onDelete?: () => void;
   isEdit?: boolean;
 }
 
-const initialState: EmployeeFormData = {
+const initialState: DealerFormData = {
   name: "",
   mobNo: "",
   email: "",
   country: "",
   isActive: true,
+  createdDate: new Date().toISOString(),
 };
 
-const createInitialState = (initialData?: Employee | null): EmployeeFormData => ({
-  name: initialData?.name ?? initialState.name,
-  mobNo: initialData?.mobNo ?? initialState.mobNo,
-  email: initialData?.email ?? initialState.email,
-  country: initialData?.country ?? initialState.country,
-  isActive: initialData?.isActive ?? initialState.isActive,
-});
+const formatCreatedDate = (value: string) => {
+  const date = new Date(value);
 
-const EmployeeForm = ({
-  initialData,
-  onSubmit,
-  onCancel,
-  onDelete,
-  isEdit = false,
-}: Props) => {
-  const [form, setForm] = useState<EmployeeFormData>(() => createInitialState(initialData));
-  const [errors, setErrors] = useState<Partial<Record<keyof EmployeeFormData, string>>>({});
+  if (Number.isNaN(date.getTime())) {
+    return "Automatically generated on save";
+  }
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+};
+
+const DealerForm = ({ initialData, onSubmit, onCancel, isEdit = false }: Props) => {
+  const [form, setForm] = useState<DealerFormData>({ ...initialState });
+  const [errors, setErrors] = useState<Partial<Record<keyof DealerFormData, string>>>({});
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        name: initialData.name,
+        mobNo: initialData.mobNo,
+        email: initialData.email,
+        country: initialData.country,
+        isActive: initialData.isActive,
+        createdDate: initialData.createdDate,
+      });
+    }
+  }, [initialData]);
 
   const handleChange = (
-    key: keyof EmployeeFormData,
-    value: EmployeeFormData[keyof EmployeeFormData]
+    key: keyof DealerFormData,
+    value: DealerFormData[keyof DealerFormData]
   ) => {
+    if (submitting) return;
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
   const handleClear = () => {
-    setForm({ ...initialState });
+    setForm({ ...initialState, createdDate: new Date().toISOString() });
     setErrors({});
   };
 
   const validate = () => {
-    const newErrors: Partial<Record<keyof EmployeeFormData, string>> = {};
+    const newErrors: Partial<Record<keyof DealerFormData, string>> = {};
 
     if (!isRequired(form.name)) newErrors.name = "Name is required";
 
     if (!isRequired(form.mobNo)) {
       newErrors.mobNo = "Mobile number is required";
-    } else if (
-      form.country &&
-      !isValidMobile(form.mobNo, mapCountry(form.country))
-    ) {
+    } else if (form.country && !isValidMobile(form.mobNo, mapCountry(form.country))) {
       newErrors.mobNo = "Invalid mobile number";
     }
 
@@ -75,15 +90,24 @@ const EmployeeForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (submitting) return;
     if (!validate()) return;
-    onSubmit(form);
+    try {
+      setSubmitting(true);
+      await onSubmit(form);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <>
+      {/*
+        Note: we keep `createdDate` in the payload (swagger requires it).
+        It's set automatically on create, and read-only when editing.
+      */}
       <div className="flex flex-col gap-4">
-
         <FormInput
           label="Name"
           required
@@ -91,6 +115,7 @@ const EmployeeForm = ({
           value={form.name}
           onChange={(e) => handleChange("name", e.target.value)}
           error={errors.name}
+          disabled={submitting}
         />
 
         <SelectInput
@@ -100,6 +125,7 @@ const EmployeeForm = ({
           onChange={(e) => handleChange("country", e.target.value)}
           options={COUNTRY_OPTIONS}
           error={errors.country}
+          disabled={submitting}
         />
 
         <FormInput
@@ -113,6 +139,7 @@ const EmployeeForm = ({
           value={form.mobNo}
           onChange={(e) => handleChange("mobNo", e.target.value)}
           error={errors.mobNo}
+          disabled={submitting}
         />
 
         <FormInput
@@ -121,32 +148,35 @@ const EmployeeForm = ({
           value={form.email}
           onChange={(e) => handleChange("email", e.target.value)}
           error={errors.email}
+          disabled={submitting}
         />
 
-        {/* Checkbox */}
         <div className="flex justify-center mt-1">
           <Checkbox
             label="Is Active"
             checked={form.isActive}
             onChange={(e) => handleChange("isActive", e.target.checked)}
+            disabled={submitting}
           />
         </div>
 
+        <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+          <p className="text-xs font-medium text-gray-500">Created Date</p>
+          <p className="mt-1 text-sm text-gray-700">
+            {formatCreatedDate(form.createdDate)}
+          </p>
+        </div>
       </div>
 
-      {/* Buttons */}
       <div className="flex gap-3 mt-6 justify-center">
-        <Button variant="secondary" onClick={handleClear}>
+        <Button variant="secondary" onClick={handleClear} disabled={submitting}>
           Clear
         </Button>
-        <Button onClick={handleSubmit}>{isEdit ? "Save" : "Create"}</Button>
-        {onDelete && (
-          <Button variant="danger" onClick={onDelete}>
-            Delete
-          </Button>
-        )}
+        <Button onClick={handleSubmit} disabled={submitting} loading={submitting}>
+          {isEdit ? "Save" : "Create"}
+        </Button>
         {onCancel && (
-          <Button variant="secondary" onClick={onCancel}>
+          <Button variant="secondary" onClick={onCancel} disabled={submitting}>
             Cancel
           </Button>
         )}
@@ -155,4 +185,5 @@ const EmployeeForm = ({
   );
 };
 
-export default EmployeeForm;
+export default DealerForm;
+

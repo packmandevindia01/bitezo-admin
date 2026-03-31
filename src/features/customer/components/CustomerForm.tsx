@@ -21,6 +21,11 @@ import { validateCustomer } from "../utils/customerValidation";
 import { formatPhone } from "../utils/formatters";
 import { getNextRegId } from "../services/customerApi";
 import { mapCountry } from "../../../utils/countryMapper";
+import {
+  CONNECTION_MODE_OPTIONS,
+  COUNTRY_OPTIONS,
+  MOBILE_PLACEHOLDERS,
+} from "../../../constants/formOptions";
 
 
 const initialState: CustomerFormData = {
@@ -46,20 +51,6 @@ const initialState: CustomerFormData = {
   isDemo: true,
   createdDate: new Date().toISOString(),
 };
-
-const mobilePlaceholders: Record<string, string> = {
-  IN: "+91 9876543210",
-  AE: "+971 501234567",
-  SA: "+966 512345678",
-  BH: "+973 36001234",
-  OM: "+968 92001234",
-  QA: "+974 33001234",
-  KW: "+965 51001234",
-  SG: "+65 91234567",
-  MY: "+60 121234567",
-  TH: "+66 812345678",
-};
-
 
 const CustomerForm = () => {
   const { showToast } = useToast();
@@ -115,7 +106,10 @@ const CustomerForm = () => {
     init();
   }, [id]);
 
-  const handleChange = (key: keyof CustomerFormData, value: any) => {
+  const handleChange = (
+    key: keyof CustomerFormData,
+    value: CustomerFormData[keyof CustomerFormData]
+  ) => {
     if (submitting) return; // ✅ prevent changes while loading
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key]: "" }));
@@ -152,14 +146,15 @@ const CustomerForm = () => {
       dispatch(fetchCustomers());
       navigate("/dashboard/customers");
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
 
-      let message = err.message || "Something went wrong";
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
       showToast(message + " ❌", "error");
 
       if (message.includes("Conflict detected on:")) {
-        let field = message.split(":")[1]?.trim();
+        const field = message.split(":")[1]?.trim();
         const normalizedField = field?.toLowerCase();
 
         let key: keyof CustomerFormData | undefined;
@@ -213,18 +208,7 @@ const CustomerForm = () => {
           required
           value={form.country}
           onChange={(e) => handleChange("country", e.target.value as CountryCode)}
-          options={[
-            { label: "India", value: "India" },
-            { label: "UAE", value: "UAE" },
-            { label: "Saudi Arabia", value: "Saudi Arabia" },
-            { label: "Bahrain", value: "Bahrain" },
-            { label: "Oman", value: "Oman" },
-            { label: "Qatar", value: "Qatar" },
-            { label: "Kuwait", value: "Kuwait" },
-            { label: "Singapore", value: "Singapore" },
-            { label: "Malaysia", value: "Malaysia" },
-            { label: "Thailand", value: "Thailand" },
-          ]}
+          options={COUNTRY_OPTIONS}
           error={errors.country}
           disabled={submitting}
         />
@@ -232,7 +216,7 @@ const CustomerForm = () => {
         <FormInput
           label="Mobile No"
           required
-          placeholder={mobilePlaceholders[mapCountry(form.country)] ?? "+91 9876543210"}
+          placeholder={MOBILE_PLACEHOLDERS[mapCountry(form.country)] ?? "+91 9876543210"}
           value={form.custMob}
           onChange={(e) => handleChange("custMob", e.target.value)}
           error={errors.custMob}
@@ -292,10 +276,7 @@ const CustomerForm = () => {
           required
           value={form.conMode}
           onChange={(e) => handleChange("conMode", e.target.value)}
-          options={[
-            { label: "Online", value: "online" },
-            { label: "Offline", value: "offline" },
-          ]}
+          options={CONNECTION_MODE_OPTIONS}
           error={errors.conMode}
           disabled={submitting}
         />

@@ -17,6 +17,7 @@ const getPageTitle = (pathname: string): string => {
     "/dashboard": "Dashboard",
     "/dashboard/users": "Users",
     "/dashboard/customers": "Customers",
+    "/dashboard/dealers": "Dealers",
     "/dashboard/users-reports": "User Reports",
     "/dashboard/customers-reports": "Customer Reports",
     "/dashboard/settings": "Settings",

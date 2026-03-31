@@ -16,6 +16,7 @@ import UserReportPage from "../features/reports/pages/UserReportPage";
 import ProtectedRoute from "./ProtectedRoute";
 import NotFoundPage from "../pages/NotFoundPage"; // 👈 add this (adjust path if needed)
 import EmployeeList from "../features/employees/pages/EmployeeListPage";
+import DealerList from "../features/dealer/pages/DealerListPage";
 
 
 const AppRoutes = () => {
@@ -30,7 +31,7 @@ const AppRoutes = () => {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* PROTECTED */}
-       {/*  <Route element={<ProtectedRoute />}> */}
+        <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<MainLayout />}>
             <Route index element={<DashboardPage />} />
 
@@ -42,6 +43,7 @@ const AppRoutes = () => {
             <Route path="user/create" element={<UserCreationPage />} />
 
             <Route path="employees" element={<EmployeeList />} />
+            <Route path="dealers" element={<DealerList />} />
           
 
             <Route path="customers-reports" element={<CustomerReportPage />} />
@@ -50,7 +52,7 @@ const AppRoutes = () => {
             {/* 👇 unknown /dashboard/* routes */}
             <Route path="*" element={<NotFoundPage />} />
           </Route>
-        {/* </Route> */}
+        </Route>
 
         {/* 👇 catch all other unknown routes */}
         <Route path="*" element={<NotFoundPage />} />

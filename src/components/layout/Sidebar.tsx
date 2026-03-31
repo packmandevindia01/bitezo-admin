@@ -11,7 +11,8 @@ import {
   BarChart2,
   TrendingUp,
   BoxesIcon,
-   BriefcaseBusiness
+  BriefcaseBusiness,
+  Store
 } from "lucide-react";
 
 import SidebarItem from "./SidebarItem";
@@ -116,6 +117,7 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
             {navItem("/dashboard/users", "Users", <Users size={15} />)}
             {navItem("/dashboard/customers", "Customers", <Building2 size={15} />)}
             {navItem("/dashboard/employees", "Employees", <BriefcaseBusiness size={15} />)}
+            {navItem("/dashboard/dealers", "Dealers", <Store size={15} />)}
           </SidebarDropdown>
 
           <SidebarDropdown icon={<BarChart3 size={17} />} label="Reports">

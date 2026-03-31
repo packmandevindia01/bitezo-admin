@@ -1,12 +1,14 @@
-// src/features/reports/pages/CustomerReportPage.tsx
 import { useEffect, useState } from "react";
-import { FileSpreadsheet, FileText, Search, RotateCcw, Filter } from "lucide-react";
-import { Table, Loader, EmptyState } from "../../../components/common";
+import { FileSpreadsheet, FileText, Search } from "lucide-react";
+import { EmptyState, FilterPanel, Loader, PageIntro, Table } from "../../../components/common";
+import {
+  CONNECTION_MODE_FILTER_OPTIONS,
+  COUNTRY_FILTER_OPTIONS,
+  DEMO_STATUS_FILTER_OPTIONS,
+} from "../../../constants/formOptions";
 import { exportCustomersExcel, exportCustomersPDF } from "../utils/customerReport";
 import { getCustomerReport } from "../services/customerRptListApi";
 import type { CustomerRptListRow, CustomerRptListParams } from "../services/customerRptListApi";
-
-const normalize = (value: string) => value.toLowerCase().trim();
 
 const INITIAL_FILTERS: CustomerRptListParams = {
   custName: "",
@@ -41,7 +43,6 @@ const CustomerReportPage = () => {
     }
   };
 
-  // Auto-fetch with debounce on filter change
   useEffect(() => {
     const delay = setTimeout(() => {
       fetchReport(filters);
@@ -71,151 +72,114 @@ const CustomerReportPage = () => {
 
   return (
     <div className="space-y-4">
+      <PageIntro
+        title="Customer Report"
+        description="Search and export customer data"
+        actions={
+          data.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => exportCustomersExcel(data)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all duration-200"
+              >
+                <FileSpreadsheet size={15} />
+                <span className="hidden sm:inline">Excel</span>
+              </button>
+              <button
+                onClick={() => exportCustomersPDF(data)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-red-500 bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-200"
+              >
+                <FileText size={15} />
+                <span className="hidden sm:inline">PDF</span>
+              </button>
+            </div>
+          ) : undefined
+        }
+      />
 
-      {/* PAGE HEADER */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <FilterPanel onReset={handleReset} resetDisabled={loading}>
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Customer Report</h1>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Search and export customer data
-          </p>
-        </div>
-
-        {/* Export buttons — only show when there's data */}
-        {data.length > 0 && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => exportCustomersExcel(data)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all duration-200"
-            >
-              <FileSpreadsheet size={15} />
-              <span className="hidden sm:inline">Excel</span>
-            </button>
-            <button
-              onClick={() => exportCustomersPDF(data)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-red-500 bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-200"
-            >
-              <FileText size={15} />
-              <span className="hidden sm:inline">PDF</span>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* FILTER CARD */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        {/* Filter header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-            <Filter size={15} className="text-[#49293e]" />
-            Filters
-          </div>
-          <button
-            onClick={handleReset}
+          <label className={labelClass}>Customer Name</label>
+          <input
+            className={inputClass}
+            placeholder="Search by name..."
+            value={filters.custName}
+            onChange={(e) => handleChange("custName", e.target.value)}
             disabled={loading}
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#49293e] transition disabled:opacity-40"
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Registration ID</label>
+          <input
+            className={inputClass}
+            placeholder="Enter reg ID..."
+            value={filters.regId}
+            onChange={(e) => handleChange("regId", e.target.value)}
+            disabled={loading}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Database</label>
+          <input
+            className={inputClass}
+            placeholder="Enter database name..."
+            value={filters.database}
+            onChange={(e) => handleChange("database", e.target.value)}
+            disabled={loading}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Country</label>
+          <select
+            className={inputClass}
+            value={filters.country}
+            onChange={(e) => handleChange("country", e.target.value)}
+            disabled={loading}
           >
-            <RotateCcw size={12} />
-            Reset
-          </button>
+            {COUNTRY_FILTER_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.value === "All" ? "All Countries" : option.label}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Filter grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-          {/* Customer Name */}
-          <div>
-            <label className={labelClass}>Customer Name</label>
-            <input
-              className={inputClass}
-              placeholder="Search by name..."
-              value={filters.custName}
-              onChange={(e) => handleChange("custName", e.target.value)}
-              disabled={loading}
-            />
-          </div>
-
-          {/* Reg ID */}
-          <div>
-            <label className={labelClass}>Registration ID</label>
-            <input
-              className={inputClass}
-              placeholder="Enter reg ID..."
-              value={filters.regId}
-              onChange={(e) => handleChange("regId", e.target.value)}
-              disabled={loading}
-            />
-          </div>
-
-          {/* Database */}
-          <div>
-            <label className={labelClass}>Database</label>
-            <input
-              className={inputClass}
-              placeholder="Enter database name..."
-              value={filters.database}
-              onChange={(e) => handleChange("database", e.target.value)}
-              disabled={loading}
-            />
-          </div>
-
-          {/* Country */}
-          <div>
-            <label className={labelClass}>Country</label>
-            <select
-              className={inputClass}
-              value={filters.country}
-              onChange={(e) => handleChange("country", e.target.value)}
-              disabled={loading}
-            >
-              <option value="All">All Countries</option>
-              <option value="India">India</option>
-              <option value="UAE">UAE</option>
-              <option value="Saudi Arabia">Saudi Arabia</option>
-              <option value="Bahrain">Bahrain</option>
-              <option value="Oman">Oman</option>
-              <option value="Qatar">Qatar</option>
-              <option value="Kuwait">Kuwait</option>
-              <option value="Singapore">Singapore</option>
-              <option value="Malaysia">Malaysia</option>
-              <option value="Thailand">Thailand</option>
-            </select>
-          </div>
-
-          {/* Demo */}
-          <div>
-            <label className={labelClass}>Demo Status</label>
-            <select
-              className={inputClass}
-              value={filters.isDemo}
-              onChange={(e) => handleChange("isDemo", e.target.value)}
-              disabled={loading}
-            >
-              <option value="All">All</option>
-              <option value="Demo">Demo</option>
-              <option value="Licenced">Licenced</option>
-            </select>
-          </div>
-
-          {/* Connection Mode */}
-          <div>
-            <label className={labelClass}>Connection Mode</label>
-            <select
-              className={inputClass}
-              value={filters.conMode}
-              onChange={(e) => handleChange("conMode", e.target.value)}
-              disabled={loading}
-            >
-              <option value="All">All</option>
-              <option value="online">Online</option>
-              <option value="offline">Offline</option>
-            </select>
-          </div>
-
+        <div>
+          <label className={labelClass}>Demo Status</label>
+          <select
+            className={inputClass}
+            value={filters.isDemo}
+            onChange={(e) => handleChange("isDemo", e.target.value)}
+            disabled={loading}
+          >
+            {DEMO_STATUS_FILTER_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
-      </div>
 
-      {/* RESULTS */}
+        <div>
+          <label className={labelClass}>Connection Mode</label>
+          <select
+            className={inputClass}
+            value={filters.conMode}
+            onChange={(e) => handleChange("conMode", e.target.value)}
+            disabled={loading}
+          >
+            {CONNECTION_MODE_FILTER_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </FilterPanel>
+
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader />
@@ -234,7 +198,6 @@ const CustomerReportPage = () => {
         />
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          {/* Results bar */}
           <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <Search size={14} />
@@ -247,7 +210,6 @@ const CustomerReportPage = () => {
           <Table data={data} columns={columns} />
         </div>
       )}
-
     </div>
   );
 };

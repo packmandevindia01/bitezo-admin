@@ -9,3 +9,5 @@ export { default as Loader } from "./Loader";
 export { default as EmptyState } from "./EmptyState";
 export { default as Pagination } from "./Pagination";
 export { default as SearchBar } from "./SearchBar";
+export { default as PageIntro } from "./PageIntro";
+export { default as FilterPanel } from "./FilterPanel";
