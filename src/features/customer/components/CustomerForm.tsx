@@ -24,6 +24,7 @@ import { formatPhone } from "../utils/formatters";
 import { sendOtpApi, verifyOtpApi } from "../../auth/services/authApi";
 import OtpForm from "../../auth/components/OtpForm";
 import { getCountryName, mapCountry } from "../../../utils/countryMapper";
+import { ensurePhonePrefix, syncPhonePrefix } from "../../../utils/phonePrefix";
 import {
   CONNECTION_MODE_OPTIONS,
   COUNTRY_OPTIONS,
@@ -40,7 +41,7 @@ interface SelectOption {
 const initialState: CustomerFormData = {
   custName: "",
   regId: "",
-  custMob: "",
+  custMob: "+91 ",
   custTel: "",
   country: "India",
   block: "",
@@ -114,11 +115,16 @@ const CustomerForm = () => {
       try {
         if (id) {
           const customer = await getCustomerById(Number(id));
+          const resolvedCountry = getCountryName(customer.country);
 
           setForm({
             ...initialState,
             ...customer,
-            country: getCountryName(customer.country),
+            country: resolvedCountry,
+            custMob: ensurePhonePrefix(
+              customer.custMob ?? "",
+              mapCountry(resolvedCountry)
+            ),
             conMode: customer.conMode?.toLowerCase() ?? "",
             createdDate: customer.createdDate ?? initialState.createdDate,
             isDemo:
@@ -251,10 +257,32 @@ const CustomerForm = () => {
       }
     }
 
-    setForm((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    setForm((prev) => {
+      if (key === "country") {
+        const nextCountry = String(value);
+        return {
+          ...prev,
+          country: nextCountry,
+          custMob: syncPhonePrefix(
+            prev.custMob,
+            mapCountry(prev.country),
+            mapCountry(nextCountry)
+          ),
+        };
+      }
+
+      if (key === "custMob") {
+        return {
+          ...prev,
+          custMob: ensurePhonePrefix(String(value), mapCountry(prev.country)),
+        };
+      }
+
+      return {
+        ...prev,
+        [key]: value,
+      };
+    });
 
     setErrors((prev) => ({
       ...prev,
@@ -594,6 +622,10 @@ const CustomerForm = () => {
             setForm({
               ...initialState,
               regId,
+              custMob: ensurePhonePrefix(
+                initialState.custMob,
+                mapCountry(initialState.country)
+              ),
             });
           }}
           disabled={submitting}
