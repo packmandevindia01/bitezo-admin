@@ -5,6 +5,7 @@ import type {
   UpdateEmployeePayload,
   EmployeeApiResponse,
 } from "../types";
+import { getCountryName } from "../../../utils/countryMapper";
 
 export interface EmployeeListParams {
   empName?: string;
@@ -44,7 +45,12 @@ const mapEmployee = (item: Record<string, unknown>): Employee => ({
 export const createEmployee = async (
   data: CreateEmployeePayload
 ): Promise<EmployeeApiResponse> => {
-  const response = await api.post("/api/admin/employee", data);
+  const payload = {
+    ...data,
+    country: getCountryName(data.country),
+  };
+
+  const response = await api.post("/api/admin/employee", payload);
   return response.data;
 };
 
@@ -101,7 +107,12 @@ export const updateEmployee = async (
   data: UpdateEmployeePayload
 ): Promise<EmployeeApiResponse> => {
   const { empId, ...rest } = data;
-  const response = await api.put(`/api/admin/employee/${empId}`, rest);
+  const payload = {
+    ...rest,
+    country: getCountryName(rest.country),
+  };
+
+  const response = await api.put(`/api/admin/employee/${empId}`, payload);
   return response.data;
 };
 

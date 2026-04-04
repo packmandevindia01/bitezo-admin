@@ -54,5 +54,9 @@ export const validateCustomer = (form: CustomerFormData) => {
     errors.conMode = "Connection mode is required";
   }
 
+  if (!form.dealerId) {
+    errors.dealerId = "Dealer is required";
+  }
+
   return errors;
 };

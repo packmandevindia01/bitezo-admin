@@ -6,12 +6,11 @@ import type { User, UserFormData } from "../types";
 interface Props {
   initialData?: User | null;
   onSubmit: (data: any) => void;
-  onCancel?: () => void;
   onDelete?: () => void;
   isEdit?: boolean;
 }
 
-const UserForm = ({ initialData, onSubmit, onCancel, onDelete, isEdit = false }: Props) => {
+const UserForm = ({ initialData, onSubmit, onDelete, isEdit = false }: Props) => {
   const [form, setForm] = useState<UserFormData>({
     name: "",
     email: "",
@@ -75,7 +74,7 @@ const UserForm = ({ initialData, onSubmit, onCancel, onDelete, isEdit = false }:
         {isEdit ? "EDIT USER" : "USER CREATION"}
       </h2>
 
-      <div className="flex flex-col gap-4 max-w-sm">
+      <div className="flex flex-col gap-4 max-w-sm mx-auto">
         <FormInput
           label="User Name"
           required
@@ -132,7 +131,7 @@ const UserForm = ({ initialData, onSubmit, onCancel, onDelete, isEdit = false }:
       </div>
 
       {/* Buttons */}
-      <div className="flex gap-3 mt-6 justify-center">
+      <div className="flex gap-3 mt-6 justify-center items-center w-full">
         <Button variant="secondary" onClick={handleClear}>
           Clear
         </Button>
@@ -142,11 +141,6 @@ const UserForm = ({ initialData, onSubmit, onCancel, onDelete, isEdit = false }:
         {onDelete && (
           <Button variant="danger" onClick={onDelete}>
             Delete
-          </Button>
-        )}
-        {onCancel && (
-          <Button variant="secondary" onClick={onCancel}>
-            Cancel
           </Button>
         )}
       </div>

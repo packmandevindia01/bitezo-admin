@@ -1,9 +1,8 @@
-import type { CountryCode } from "libphonenumber-js";
 export interface CustomerFormData {
   custName: string;
   custMob: string;
   custTel: string;
-  country: CountryCode;
+  country: string;
   block?: string;
   area?: string;
   road?: string;
@@ -19,6 +18,8 @@ export interface CustomerFormData {
   fileName?: string;
   filePath?: string;
   isDemo: boolean;
+  dealerId: number;
+  empId?: number;
   createdDate: string;
 }
 
@@ -48,7 +49,12 @@ export interface Customer {
   fileName?: string;
   filePath?: string;
 
+  version?: string;
   isDemo: string;
+  dealerId?: number;
+  empId?: number;
+  dealerName?: string;
+  employeeName?: string;
 
   createdDate?: string;
 }

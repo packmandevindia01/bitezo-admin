@@ -44,7 +44,6 @@ const UserCreationPage = () => {
         <div className="w-full max-w-3xl mx-auto bg-white p-6 rounded-xl shadow">
           <UserForm
             onSubmit={handleSubmit}
-            onCancel={() => navigate("/dashboard/users")}
             isEdit={false} // 👈 shows password fields
           />
         </div>

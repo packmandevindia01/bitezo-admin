@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { FormInput, Button, SelectInput, Checkbox } from "../../../components/common";
 import { COUNTRY_OPTIONS, MOBILE_PLACEHOLDERS } from "../../../constants/formOptions";
 import { isRequired, isValidEmail, isValidMobile } from "../../../utils/validators";
-import { mapCountry } from "../../../utils/countryMapper";
+import { getCountryName, mapCountry } from "../../../utils/countryMapper";
 import type { Dealer, DealerFormData } from "../types";
 
 interface Props {
   initialData?: Dealer | null;
   onSubmit: (data: DealerFormData) => void | Promise<void>;
-  onCancel?: () => void;
   isEdit?: boolean;
 }
 
@@ -38,7 +37,7 @@ const formatCreatedDate = (value: string) => {
   }).format(date);
 };
 
-const DealerForm = ({ initialData, onSubmit, onCancel, isEdit = false }: Props) => {
+const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
   const [form, setForm] = useState<DealerFormData>({ ...initialState });
   const [errors, setErrors] = useState<Partial<Record<keyof DealerFormData, string>>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -49,7 +48,7 @@ const DealerForm = ({ initialData, onSubmit, onCancel, isEdit = false }: Props) 
         name: initialData.name,
         mobNo: initialData.mobNo,
         email: initialData.email,
-        country: initialData.country,
+        country: getCountryName(initialData.country),
         isActive: initialData.isActive,
         createdDate: initialData.createdDate,
       });
@@ -175,11 +174,6 @@ const DealerForm = ({ initialData, onSubmit, onCancel, isEdit = false }: Props) 
         <Button onClick={handleSubmit} disabled={submitting} loading={submitting}>
           {isEdit ? "Save" : "Create"}
         </Button>
-        {onCancel && (
-          <Button variant="secondary" onClick={onCancel} disabled={submitting}>
-            Cancel
-          </Button>
-        )}
       </div>
     </>
   );

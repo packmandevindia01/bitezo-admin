@@ -1,9 +1,10 @@
 // src/features/customer/components/CustomerTable.tsx
 import { Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Table, StatusBadge } from "../../../components/common";
+import { Table } from "../../../components/common";
 import type { Column } from "../../../components/common/Table";
 import type { Customer } from "../types";
+import { getCountryName } from "../../../utils/countryMapper";
 
 interface Props {
   customers: Customer[];
@@ -16,16 +17,23 @@ const CustomerTable = ({ customers }: Props) => {
     { header: "#", accessor: "custId" },
     { header: "Name", accessor: "custName" },
     { header: "Mobile", accessor: "custMob" },
-    { header: "Country", accessor: "country" },
+    {
+      header: "Dealer",
+      accessor: "dealerName",
+      render: (row) => row.dealerName || (row.dealerId ? String(row.dealerId) : "-"),
+    },
+    {
+      header: "Country",
+      accessor: "country",
+      render: (row) => getCountryName(row.country),
+    },
     { header: "Area", accessor: "area" },
     { header: "Branches", accessor: "branchCount" },
     { header: "Reg ID", accessor: "regId" },
     {
-      header: "Demo",
-      accessor: "isDemo",
-      render: (row) => (
-        <StatusBadge status={row.isDemo === "Demo" ? "active" : "inactive"} />
-      ),
+      header: "Version",
+      accessor: "version",
+      render: (row) => row.version || row.isDemo || "-",
     },
     {
       header: "Actions",

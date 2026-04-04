@@ -1,12 +1,41 @@
 import { generateExcel } from "./exportExcel";
 import { generatePDF } from "./exportPDF";
 import { formatDate } from "./reportHelpers";
+import { getCountryName } from "../../../utils/countryMapper";
 
-const columns = [
+const excelColumns = [
   "ID",
   "Customer Name",
   "Mobile",
   "Telephone",
+  "Dealer",
+  "Employee",
+  "Country",
+  "Block",
+  "Area / Street",
+  "Road No",
+  "Building No",
+  "Flat No",
+  "CR No",
+  "Email",
+  "Tax Reg No",
+  "Branches",
+  "Reg ID",
+  "Database",
+  "Connection Mode",
+  "Version",
+  "File Name",
+  "File Path",
+  "Created Date",
+];
+
+const pdfColumns = [
+  "ID",
+  "Customer Name",
+  "Mobile",
+  "Telephone",
+  "Dealer",
+  "Employee",
   "Country",
   "CR No",
   "Email",
@@ -14,49 +43,66 @@ const columns = [
   "Reg ID",
   "Database",
   "Connection Mode",
-  "Demo",
+  "Version",
   "Created Date",
 ];
 
-// 🔥 COMMON ROW MAPPER
-const mapRows = (customers: any[]) => {
+const mapExcelRows = (customers: any[]) => {
   return customers.map((c) => [
     c.custId || "-",
     c.custName || "-",
     c.custMob || "-",
     c.custTel || "-",
-    c.country || "-",
+    c.dealerName || (c.dealerId ? String(c.dealerId) : "-"),
+    c.employeeName || (c.empId ? String(c.empId) : "-"),
+    c.country ? getCountryName(c.country) : "-",
+    c.block || "-",
+    c.area || "-",
+    c.road || "-",
+    c.building || "-",
+    c.flatNo || "-",
+    c.crNo || "-",
+    c.email || "-",
+    c.taxRegNo || "-",
+    c.branchCount ?? "-",
+    c.regId || "-",
+    c.database || "-",
+    c.conMode || "-",
+    c.version || c.isDemo || "-",
+    c.fileName || "-",
+    c.filePath || "-",
+    c.createdDate ? formatDate(c.createdDate) : "-",
+  ]);
+};
+
+const mapPdfRows = (customers: any[]) => {
+  return customers.map((c) => [
+    c.custId || "-",
+    c.custName || "-",
+    c.custMob || "-",
+    c.custTel || "-",
+    c.dealerName || (c.dealerId ? String(c.dealerId) : "-"),
+    c.employeeName || (c.empId ? String(c.empId) : "-"),
+    c.country ? getCountryName(c.country) : "-",
     c.crNo || "-",
     c.email || "-",
     c.branchCount ?? "-",
     c.regId || "-",
     c.database || "-",
     c.conMode || "-",
-    c.isDemo || "-",
+    c.version || c.isDemo || "-",
     c.createdDate ? formatDate(c.createdDate) : "-",
   ]);
 };
 
-// ✅ EXCEL
 export const exportCustomersExcel = (customers: any[]) => {
-  const rows = mapRows(customers);
+  const rows = mapExcelRows(customers);
 
-  generateExcel(
-    "Customer Report",
-    columns,
-    rows,
-    "Customers_Report"
-  );
+  generateExcel("Customer Report", excelColumns, rows, "Customers_Report");
 };
 
-// ✅ PDF
 export const exportCustomersPDF = (customers: any[]) => {
-  const rows = mapRows(customers);
+  const rows = mapPdfRows(customers);
 
-  generatePDF(
-    "Customer Report",
-    columns,
-    rows,
-    "Customers_Report"
-  );
+  generatePDF("Customer Report", pdfColumns, rows, "Customers_Report");
 };

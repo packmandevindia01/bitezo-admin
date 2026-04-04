@@ -40,7 +40,7 @@ api.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          `${BASE_URL}/api/CompanyAuth/refresh`,
+          `${BASE_URL}/api/auth/refresh`,
           {},
           {
             headers: {

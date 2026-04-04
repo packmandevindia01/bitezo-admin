@@ -12,60 +12,61 @@ const LoginForm = () => {
   const { showToast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // 👇 add error state
-  const [errors, setErrors] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({ username: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 👇 inline validation
-    const newErrors = { email: "", password: "" };
-    if (!email.trim()) newErrors.email = "Username is required";
+    const newErrors = { username: "", password: "" };
+    if (!username.trim()) newErrors.username = "Username is required";
     if (!password.trim()) newErrors.password = "Password is required";
 
-    if (newErrors.email || newErrors.password) {
+    if (newErrors.username || newErrors.password) {
       setErrors(newErrors);
-      return; // 👈 no toast needed, inline errors show
+      return;
     }
 
-    setErrors({ email: "", password: "" });
+    setErrors({ username: "", password: "" });
 
     try {
       setLoading(true);
 
-      const data = await loginApi(email, password);
+      const data = await loginApi(username, password);
 
-      if (!data?.accessToken) {
+      if (!data?.accessToken || !data?.refreshToken || !data?.user) {
         throw new Error("Login failed");
       }
 
-      dispatch(setCredentials({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        user: {
-          userId: data.user.userId,
-          userName: data.user.userName,
-        },
-      }));
+      dispatch(
+        setCredentials({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          sessionExpiresAt: data.session?.expiresAt,
+          user: {
+            userId: data.user.userId,
+            userName: data.user.userName,
+            email: data.user.email,
+            isMaster: data.user.isMaster,
+          },
+        })
+      );
 
-      showToast("Login successful 🎉", "success");
+      showToast("Login successful", "success");
       navigate("/dashboard");
-
     } catch (error: any) {
       console.error(error);
 
       const message =
-        error?.response?.data?.message
-        || error?.message
-        || "Invalid username or password";
+        error?.response?.data?.message ||
+        error?.message ||
+        "Invalid username or password";
 
       showToast(message, "error");
 
-      setEmail("");
+      setUsername("");
       setPassword("");
     } finally {
       setLoading(false);
@@ -77,36 +78,32 @@ const LoginForm = () => {
       onSubmit={handleSubmit}
       className="w-full max-w-md bg-white p-6 sm:p-8 rounded-xl shadow-md mx-auto"
     >
-      {/* TITLE */}
       <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center text-[#49293e]">
         Login
       </h2>
 
-      {/* USERNAME */}
       <FormInput
         type="text"
         placeholder="Username"
-        value={email}
+        value={username}
         onChange={(e) => {
-          setEmail(e.target.value);
-          setErrors((prev) => ({ ...prev, email: "" })); // 👈 clear on type
+          setUsername(e.target.value);
+          setErrors((prev) => ({ ...prev, username: "" }));
         }}
-        error={errors.email} // 👈 show inline error
+        error={errors.username}
       />
 
-      {/* PASSWORD */}
       <FormInput
         type="password"
         placeholder="Password"
         value={password}
         onChange={(e) => {
           setPassword(e.target.value);
-          setErrors((prev) => ({ ...prev, password: "" })); // 👈 clear on type
+          setErrors((prev) => ({ ...prev, password: "" }));
         }}
-        error={errors.password} // 👈 show inline error
+        error={errors.password}
       />
 
-      {/* FORGOT PASSWORD */}
       <p
         onClick={() => navigate("/forgot-password")}
         className="text-sm text-right mt-2 mb-4 text-gray-600 cursor-pointer hover:underline"
@@ -114,7 +111,6 @@ const LoginForm = () => {
         Forgot Password?
       </p>
 
-      {/* BUTTON */}
       <Button type="submit" size="lg" fullWidth disabled={loading}>
         {loading ? "Logging in..." : "Login"}
       </Button>

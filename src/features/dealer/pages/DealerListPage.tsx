@@ -165,7 +165,7 @@ const DealerListPage = () => {
 
       {/* CREATE MODAL */}
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Add Dealer">
-        <DealerForm onSubmit={handleCreate} onCancel={() => setCreateOpen(false)} isEdit={false} />
+        <DealerForm onSubmit={handleCreate} isEdit={false} />
       </Modal>
 
       {/* EDIT MODAL */}
@@ -180,10 +180,6 @@ const DealerListPage = () => {
         <DealerForm
           initialData={editDealer}
           onSubmit={handleEditSubmit}
-          onCancel={() => {
-            setEditOpen(false);
-            setEditDealer(null);
-          }}
           isEdit={true}
         />
       </Modal>

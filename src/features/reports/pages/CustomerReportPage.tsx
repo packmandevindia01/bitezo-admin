@@ -9,6 +9,9 @@ import {
 import { exportCustomersExcel, exportCustomersPDF } from "../utils/customerReport";
 import { getCustomerReport } from "../services/customerRptListApi";
 import type { CustomerRptListRow, CustomerRptListParams } from "../services/customerRptListApi";
+import { getDealerListName } from "../../dealer/services/dealerApi";
+import { getEmployees } from "../../employees/services/employeeApi";
+import { getCountryName } from "../../../utils/countryMapper";
 
 const INITIAL_FILTERS: CustomerRptListParams = {
   custName: "",
@@ -17,7 +20,14 @@ const INITIAL_FILTERS: CustomerRptListParams = {
   country: "All",
   isDemo: "All",
   conMode: "All",
+  dealerId: undefined,
+  empId: undefined,
 };
+
+interface SelectOption {
+  label: string;
+  value: string;
+}
 
 const inputClass =
   "w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#49293e]/20 focus:border-[#49293e]/40 transition placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400";
@@ -29,6 +39,74 @@ const CustomerReportPage = () => {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [filters, setFilters] = useState<CustomerRptListParams>(INITIAL_FILTERS);
+  const [dealerOptions, setDealerOptions] = useState<SelectOption[]>([]);
+  const [employeeOptions, setEmployeeOptions] = useState<SelectOption[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+
+  useEffect(() => {
+    const loadDealers = async () => {
+      try {
+        const dealers = await getDealerListName();
+        setDealerOptions(
+          dealers.map((dealer) => ({
+            label: dealer.dealerName,
+            value: String(dealer.dealerId),
+          }))
+        );
+      } catch {
+        setDealerOptions([]);
+      }
+    };
+
+    loadDealers();
+  }, []);
+
+  useEffect(() => {
+    const selectedDealerId = filters.dealerId;
+
+    if (typeof selectedDealerId !== "number") {
+      setEmployeeOptions([]);
+      setFilters((prev) =>
+        typeof prev.empId === "number" ? { ...prev, empId: undefined } : prev
+      );
+      return;
+    }
+
+    const loadEmployees = async () => {
+      setLoadingEmployees(true);
+      try {
+        const employees = await getEmployees({ dealerId: selectedDealerId });
+        const nextOptions = employees.map((employee) => ({
+          label: employee.name,
+          value: String(employee.empId),
+        }));
+
+        setEmployeeOptions(nextOptions);
+        setFilters((prev) => {
+          if (prev.dealerId !== selectedDealerId) return prev;
+
+          const selectedStillExists = nextOptions.some(
+            (option) => Number(option.value) === prev.empId
+          );
+
+          return selectedStillExists || typeof prev.empId !== "number"
+            ? prev
+            : { ...prev, empId: undefined };
+        });
+      } catch {
+        setEmployeeOptions([]);
+        setFilters((prev) =>
+          prev.dealerId === selectedDealerId
+            ? { ...prev, empId: undefined }
+            : prev
+        );
+      } finally {
+        setLoadingEmployees(false);
+      }
+    };
+
+    loadEmployees();
+  }, [filters.dealerId]);
 
   const fetchReport = async (params: CustomerRptListParams) => {
     setLoading(true);
@@ -64,10 +142,32 @@ const CustomerReportPage = () => {
     { header: "ID", accessor: "custId" as const },
     { header: "Name", accessor: "custName" as const },
     { header: "Mobile", accessor: "custMob" as const },
-    { header: "Country", accessor: "country" as const },
+    { header: "Telephone", accessor: "custTel" as const },
+    {
+      header: "Dealer",
+      accessor: "dealerName" as const,
+      render: (row: CustomerRptListRow) =>
+        row.dealerName || (row.dealerId ? String(row.dealerId) : "-"),
+    },
+    {
+      header: "Employee",
+      accessor: "employeeName" as const,
+      render: (row: CustomerRptListRow) =>
+        row.employeeName || (row.empId ? String(row.empId) : "-"),
+    },
+    {
+      header: "Country",
+      accessor: "country" as const,
+      render: (row: CustomerRptListRow) => getCountryName(row.country),
+    },
     { header: "Reg ID", accessor: "regId" as const },
     { header: "Database", accessor: "database" as const },
     { header: "Mode", accessor: "conMode" as const },
+    {
+      header: "Version",
+      accessor: "version" as const,
+      render: (row: CustomerRptListRow) => row.version || row.isDemo || "-",
+    },
   ];
 
   return (
@@ -129,6 +229,57 @@ const CustomerReportPage = () => {
             onChange={(e) => handleChange("database", e.target.value)}
             disabled={loading}
           />
+        </div>
+
+        <div>
+          <label className={labelClass}>Dealer</label>
+          <select
+            className={inputClass}
+            value={typeof filters.dealerId === "number" ? String(filters.dealerId) : ""}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                dealerId: e.target.value ? Number(e.target.value) : undefined,
+                empId: undefined,
+              }))
+            }
+            disabled={loading}
+          >
+            <option value="">All Dealers</option>
+            {dealerOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className={labelClass}>Employee</label>
+          <select
+            className={inputClass}
+            value={typeof filters.empId === "number" ? String(filters.empId) : ""}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                empId: e.target.value ? Number(e.target.value) : undefined,
+              }))
+            }
+            disabled={loading || typeof filters.dealerId !== "number" || loadingEmployees}
+          >
+            <option value="">
+              {typeof filters.dealerId !== "number"
+                ? "Select dealer first"
+                : loadingEmployees
+                  ? "Loading employees..."
+                  : "All Employees"}
+            </option>
+            {employeeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

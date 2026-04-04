@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FormInput, Button, SelectInput, Checkbox } from "../../../components/common";
 import { COUNTRY_OPTIONS, MOBILE_PLACEHOLDERS } from "../../../constants/formOptions";
 import { isRequired, isValidEmail, isValidMobile } from "../../../utils/validators";
-import { mapCountry } from "../../../utils/countryMapper";
+import { getCountryName, mapCountry } from "../../../utils/countryMapper";
 import type { Employee, EmployeeFormData } from "../types";
 import type { SelectOption } from "../../../constants/formOptions";
 
@@ -27,7 +27,7 @@ const createInitialState = (initialData?: Employee | null): EmployeeFormData => 
   name: initialData?.name ?? initialState.name,
   mobNo: initialData?.mobNo ?? initialState.mobNo,
   email: initialData?.email ?? initialState.email,
-  country: initialData?.country ?? initialState.country,
+  country: initialData?.country ? getCountryName(initialData.country) : initialState.country,
   dealerId: initialData?.dealerId ?? initialState.dealerId,
   isActive: initialData?.isActive ?? initialState.isActive,
 });

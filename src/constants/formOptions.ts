@@ -5,7 +5,7 @@ export interface SelectOption {
 
 export const COUNTRY_OPTIONS: SelectOption[] = [
   { label: "India", value: "India" },
-  { label: "UAE", value: "UAE" },
+  { label: "United Arab Emirates", value: "United Arab Emirates" },
   { label: "Saudi Arabia", value: "Saudi Arabia" },
   { label: "Bahrain", value: "Bahrain" },
   { label: "Oman", value: "Oman" },

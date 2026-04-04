@@ -4,6 +4,7 @@ import type {
   CreateDealerPayload,
   DealerApiResponse,
 } from "../types";
+import { getCountryName } from "../../../utils/countryMapper";
 
 export interface DealerListParams {
   dealerName?: string;
@@ -29,7 +30,12 @@ const parseIsActive = (val: unknown): boolean => {
 export const createDealer = async (
   data: CreateDealerPayload
 ): Promise<DealerApiResponse> => {
-  const response = await api.post("/api/admin/dealer", data);
+  const payload = {
+    ...data,
+    country: getCountryName(data.country),
+  };
+
+  const response = await api.post("/api/admin/dealer", payload);
   return response.data;
 };
 
@@ -116,7 +122,7 @@ export const updateDealer = async (
     name: data.name,
     mobNo: data.mobNo,
     email: data.email,
-    country: data.country,
+    country: getCountryName(data.country),
     isActive: Boolean(data.isActive),
     createdDate: data.createdDate,
   };
@@ -126,22 +132,33 @@ export const updateDealer = async (
 };
 
 export const getDealerListName = async (): Promise<DealerNameOption[]> => {
-  const response = await api.get("/api/admin/dealer/listname");
-  const body = response.data;
-  const list = Array.isArray(body)
-    ? body
-    : Array.isArray(body?.data)
-      ? body.data
-      : [];
+  try {
+    const response = await api.get("/api/admin/dealer/listname");
+    const body = response.data;
+    const list = Array.isArray(body)
+      ? body
+      : Array.isArray(body?.data)
+        ? body.data
+        : [];
 
-  return list.map((item: Record<string, unknown>) => ({
-    dealerId:
-      (item.dealerId as number | undefined) ??
-      (item.id as number | undefined) ??
-      0,
-    dealerName:
-      (item.dealerName as string | undefined) ??
-      (item.name as string | undefined) ??
-      "",
-  }));
+    return list.map((item: Record<string, unknown>) => ({
+      dealerId:
+        (item.dealerId as number | undefined) ??
+        (item.id as number | undefined) ??
+        0,
+      dealerName:
+        (item.dealerName as string | undefined) ??
+        (item.name as string | undefined) ??
+        "",
+    }));
+  } catch (err: unknown) {
+    const maybe = err as {
+      response?: { status?: number; data?: unknown };
+    };
+
+    if (maybe.response?.status === 404 || maybe.response?.status === 400) {
+      return [];
+    }
+    throw err;
+  }
 };

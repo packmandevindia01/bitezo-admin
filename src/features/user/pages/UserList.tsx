@@ -123,7 +123,6 @@ const UserList = () => {
       >
         <UserForm
           onSubmit={handleCreate}
-          onCancel={() => setCreateOpen(false)}
           isEdit={false}
         />
       </Modal>
@@ -137,7 +136,6 @@ const UserList = () => {
         <UserForm
           initialData={editUser}
           onSubmit={handleEditSubmit}
-          onCancel={() => { setEditOpen(false); setEditUser(null); }}
           isEdit={true}
         />
       </Modal>

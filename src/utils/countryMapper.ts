@@ -1,52 +1,74 @@
 import type { CountryCode } from "libphonenumber-js";
 
-export const mapCountry = (country: string): CountryCode => {
-  const c = country.toLowerCase();
+const COUNTRY_NAME_BY_CODE: Record<string, string> = {
+  IN: "India",
+  AE: "United Arab Emirates",
+  SA: "Saudi Arabia",
+  BH: "Bahrain",
+  OM: "Oman",
+  QA: "Qatar",
+  KW: "Kuwait",
+  SG: "Singapore",
+  MY: "Malaysia",
+  TH: "Thailand",
+  ID: "Indonesia",
+  PH: "Philippines",
+  CN: "China",
+  JP: "Japan",
+  KR: "South Korea",
+};
 
-  // 🇮🇳 INDIA
+export const getCountryName = (country?: string | null): string => {
+  if (!country) return "India";
+
+  const trimmed = country.trim();
+  const normalizedCode = trimmed.toUpperCase();
+
+  if (COUNTRY_NAME_BY_CODE[normalizedCode]) {
+    return COUNTRY_NAME_BY_CODE[normalizedCode];
+  }
+
+  const c = trimmed.toLowerCase();
+
+  if (c.includes("india")) return "India";
+  if (c.includes("uae") || c.includes("united arab emirates")) {
+    return "United Arab Emirates";
+  }
+  if (c.includes("saudi")) return "Saudi Arabia";
+  if (c.includes("bahrain")) return "Bahrain";
+  if (c.includes("oman")) return "Oman";
+  if (c.includes("qatar")) return "Qatar";
+  if (c.includes("kuwait")) return "Kuwait";
+  if (c.includes("singapore")) return "Singapore";
+  if (c.includes("malaysia")) return "Malaysia";
+  if (c.includes("thailand")) return "Thailand";
+  if (c.includes("indonesia")) return "Indonesia";
+  if (c.includes("philippines")) return "Philippines";
+  if (c.includes("china")) return "China";
+  if (c.includes("japan")) return "Japan";
+  if (c.includes("korea")) return "South Korea";
+
+  return trimmed;
+};
+
+export const mapCountry = (country?: string | null): CountryCode => {
+  const c = getCountryName(country).toLowerCase();
+
   if (c.includes("india")) return "IN";
-
-  // 🇦🇪 UAE
-  if (c.includes("uae") || c.includes("united arab emirates")) return "AE";
-
-  // 🇸🇦 SAUDI
+  if (c.includes("united arab emirates")) return "AE";
   if (c.includes("saudi")) return "SA";
-
-  // 🇧🇭 BAHRAIN
   if (c.includes("bahrain")) return "BH";
-
-  // 🇴🇲 OMAN
   if (c.includes("oman")) return "OM";
-
-  // 🇶🇦 QATAR
   if (c.includes("qatar")) return "QA";
-
-  // 🇰🇼 KUWAIT
   if (c.includes("kuwait")) return "KW";
-
-  // 🇸🇬 SINGAPORE
   if (c.includes("singapore")) return "SG";
-
-  // 🇲🇾 MALAYSIA
   if (c.includes("malaysia")) return "MY";
-
-  // 🇹🇭 THAILAND
   if (c.includes("thailand")) return "TH";
-
-  // 🇮🇩 INDONESIA
   if (c.includes("indonesia")) return "ID";
-
-  // 🇵🇭 PHILIPPINES
   if (c.includes("philippines")) return "PH";
-
-  // 🇨🇳 CHINA
   if (c.includes("china")) return "CN";
-
-  // 🇯🇵 JAPAN
   if (c.includes("japan")) return "JP";
-
-  // 🇰🇷 SOUTH KOREA
   if (c.includes("korea")) return "KR";
 
-  return "IN"; // ✅ fallback
+  return "IN";
 };

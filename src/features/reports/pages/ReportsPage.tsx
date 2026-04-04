@@ -52,11 +52,17 @@ const ReportsPage = () => {
   const customerRptColumns = useMemo(() => {
     const columns = [
       { header: "Customer", accessor: "custName" as const },
+      { header: "Dealer", accessor: "dealerName" as const },
+      { header: "Employee", accessor: "employeeName" as const },
       { header: "Reg ID", accessor: "regId" as const },
       { header: "Country", accessor: "country" as const },
       { header: "Database", accessor: "database" as const },
       { header: "Con Mode", accessor: "conMode" as const },
-      { header: "Demo", accessor: "isDemo" as const },
+      {
+        header: "Version",
+        accessor: "version" as const,
+        render: (row: CustomerRptListRow) => row.version || row.isDemo || "-",
+      },
     ];
     return columns;
   }, []);

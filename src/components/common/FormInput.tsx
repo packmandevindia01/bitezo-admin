@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 interface Props {
   label?: string;
@@ -36,6 +37,9 @@ const FormInput = ({
   autoFocus,
 }: Props) => {
   const inputId = id || name || label?.replace(/\s+/g, "-").toLowerCase();
+  const isPasswordField = type === "password";
+  const [showPassword, setShowPassword] = useState(false);
+  const inputType = isPasswordField && showPassword ? "text" : type;
 
   return (
     <div className="flex flex-col gap-1 mb-4 w-full">
@@ -52,29 +56,46 @@ const FormInput = ({
       )}
 
       {/* INPUT */}
-      <input
-        id={inputId}
-        name={name}
-        type={type}
-        value={value}
-        onChange={onChange}
-        onBlur={onBlur}
-        onKeyDown={onKeyDown}
-        disabled={disabled}
-        readOnly={readOnly}
-        autoComplete={autoComplete}
-        autoFocus={autoFocus}
-        placeholder={placeholder || (required ? "Enter value" : "")}
-        className={`
-          w-full px-3 md:px-4 py-2
-          text-sm md:text-base
-          rounded-md border outline-none transition
-          ${error ? "border-red-500 bg-red-50" : "border-gray-300"}
-          ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
-          ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}
-          focus:border-[#49293e]
-        `}
-      />
+      <div className="relative">
+        <input
+          id={inputId}
+          name={name}
+          type={inputType}
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          onKeyDown={onKeyDown}
+          disabled={disabled}
+          readOnly={readOnly}
+          autoComplete={autoComplete}
+          autoFocus={autoFocus}
+          placeholder={placeholder || (required ? "Enter value" : "")}
+          className={`
+            w-full px-3 md:px-4 py-2
+            text-sm md:text-base
+            rounded-md border outline-none transition
+            ${isPasswordField ? "pr-12" : ""}
+            ${error ? "border-red-500 bg-red-50" : "border-gray-300"}
+            ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
+            ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}
+            focus:border-[#49293e]
+          `}
+        />
+
+        {isPasswordField && (
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute inset-y-0 right-1 my-1 flex items-center justify-center rounded-md px-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:text-gray-300"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+            disabled={disabled}
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
+      </div>
 
       {/* ERROR */}
       {error && (
