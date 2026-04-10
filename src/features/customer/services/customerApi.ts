@@ -22,7 +22,7 @@ const mapCustomer = (item: Record<string, unknown>): Customer => ({
   branchCount: (item.branchCount as number | undefined) ?? 0,
   regId: (item.regId as string | undefined) ?? "",
   database: (item.database as string | undefined) ?? "",
-  conMode: (item.conMode as string | undefined) ?? "",
+  conMode: (item.conMode as string | undefined) ?? "", 
   fileName: (item.fileName as string | undefined) ?? "",
   filePath: (item.filePath as string | undefined) ?? "",
   version:
@@ -102,8 +102,15 @@ export const getNextRegId = async (): Promise<string> => {
 // Axios handles this gracefully — non-2xx responses throw via the interceptor
 export const updateCustomer = async (
   id: number,
-  data: CustomerFormData & { custId: number }
+  data: CustomerFormData & { custId: number },
+  otpToken?: string
 ) => {
-  const response = await api.put(`/api/admin/customer/${id}`, data);
+  const response = await api.put(`/api/admin/customer/${id}`, data, {
+    headers: otpToken
+      ? {
+          "Otp-Token": otpToken,
+        }
+      : undefined,
+  });
   return response.data;
 };

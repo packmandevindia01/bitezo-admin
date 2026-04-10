@@ -79,6 +79,8 @@ const CustomerForm = () => {
   const [otpError, setOtpError] = useState("");
   const [otpToken, setOtpToken] = useState("");
   const [otpVerifiedEmail, setOtpVerifiedEmail] = useState("");
+  const [otpPendingEmail, setOtpPendingEmail] = useState("");
+  const [originalEmail, setOriginalEmail] = useState("");
   const [sendingOtp, setSendingOtp] = useState(false);
   const [resendingOtp, setResendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
@@ -87,8 +89,12 @@ const CustomerForm = () => {
   const hasDealerOptions = dealerOptions.length > 0;
   const disableSave = submitting || (!isEdit && !hasDealerOptions);
   const normalizedEmail = form.email.trim().toLowerCase();
+  const normalizedOriginalEmail = originalEmail.trim().toLowerCase();
+  const hasEmailChanged = isEdit && normalizedEmail !== normalizedOriginalEmail;
+  const requiresEmailVerification = !isEdit || hasEmailChanged;
   const isEmailVerified =
-    !isEdit && Boolean(otpToken) && otpVerifiedEmail === normalizedEmail;
+    !requiresEmailVerification ||
+    (Boolean(otpToken) && otpVerifiedEmail === normalizedEmail);
 
   useEffect(() => {
     const loadDealers = async () => {
@@ -108,7 +114,7 @@ const CustomerForm = () => {
     };
 
     loadDealers();
-  }, [showToast]);
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -133,9 +139,11 @@ const CustomerForm = () => {
                   customer.isDemo.toLowerCase() === "true"
                 : Boolean(customer.isDemo),
           });
+          setOriginalEmail((customer.email ?? "").trim().toLowerCase());
         } else {
           const regId = await getNextRegId();
           setForm((prev) => ({ ...prev, regId }));
+          setOriginalEmail("");
         }
       } catch (err) {
         console.error(err);
@@ -144,14 +152,33 @@ const CustomerForm = () => {
     };
 
     init();
-  }, [id, showToast]);
+  }, [id]);
 
   const resetOtpVerification = () => {
     setOtpError("");
     setOtpToken("");
     setOtpVerifiedEmail("");
+    setOtpPendingEmail("");
     setOtpModalOpen(false);
     setOtpFormResetKey((prev) => prev + 1);
+  };
+
+  const openOtpVerification = (message?: string) => {
+    if (!normalizedEmail) return;
+    setOtpError(message ?? "");
+    setOtpModalOpen(true);
+    setOtpFormResetKey((prev) => prev + 1);
+  };
+
+  const isVerificationIssue = (message: string) => {
+    const normalizedMessage = message.toLowerCase();
+    return (
+      (normalizedMessage.includes("email") &&
+        normalizedMessage.includes("verif")) ||
+      normalizedMessage.includes("otp") ||
+      normalizedMessage.includes("otp-token") ||
+      normalizedMessage.includes("otp token")
+    );
   };
 
   const resolveErrorMessage = (err: unknown, fallback: string) => {
@@ -252,7 +279,10 @@ const CustomerForm = () => {
 
     if (key === "email") {
       const nextEmail = String(value).trim().toLowerCase();
-      if (nextEmail !== normalizedEmail && (otpToken || otpVerifiedEmail || otpModalOpen)) {
+      if (
+        nextEmail !== normalizedEmail &&
+        (otpToken || otpVerifiedEmail || otpPendingEmail || otpModalOpen)
+      ) {
         resetOtpVerification();
       }
     }
@@ -298,13 +328,15 @@ const CustomerForm = () => {
   });
 
   const sendCustomerOtp = async (isResend = false) => {
-    if (!normalizedEmail) {
+    const targetEmail = normalizedEmail;
+
+    if (!targetEmail) {
       setErrors((prev) => ({ ...prev, email: "Email is required" }));
       showToast("Enter an email address first", "error");
       return;
     }
 
-    if (!isValidEmail(normalizedEmail)) {
+    if (!isValidEmail(targetEmail)) {
       setErrors((prev) => ({ ...prev, email: "Invalid email" }));
       showToast("Enter a valid email address first", "error");
       return;
@@ -317,10 +349,11 @@ const CustomerForm = () => {
     }
 
     try {
-      await sendOtpApi(normalizedEmail);
+      await sendOtpApi(targetEmail);
       setOtpError("");
       setOtpToken("");
       setOtpVerifiedEmail("");
+      setOtpPendingEmail(targetEmail);
       setOtpModalOpen(true);
       setOtpFormResetKey((prev) => prev + 1);
       showToast(
@@ -342,18 +375,26 @@ const CustomerForm = () => {
   };
 
   const verifyCustomerEmail = async (otpValue: string) => {
+    const targetEmail = otpPendingEmail || normalizedEmail;
+
+    if (!targetEmail) {
+      setOtpError("Email is required");
+      return;
+    }
+
     setVerifyingOtp(true);
     setOtpError("");
 
     try {
-      const token = await verifyOtpApi(normalizedEmail, otpValue.trim());
+      const token = await verifyOtpApi(targetEmail, otpValue.trim());
 
       if (!token) {
         throw new Error("OTP verified, but no OTP token was returned");
       }
 
       setOtpToken(token);
-      setOtpVerifiedEmail(normalizedEmail);
+      setOtpVerifiedEmail(targetEmail);
+      setOtpPendingEmail(targetEmail);
       setOtpModalOpen(false);
       showToast("Email verified successfully", "success");
     } catch (err) {
@@ -388,6 +429,19 @@ const CustomerForm = () => {
     }
 
     if (!isEdit && !isEmailVerified) {
+      setErrors((prev) => ({
+        ...prev,
+        email: "Verify the email address before saving",
+      }));
+      await sendCustomerOtp();
+      return;
+    }
+
+    if (isEdit && hasEmailChanged && !isEmailVerified) {
+      setErrors((prev) => ({
+        ...prev,
+        email: "Verify the new email address before updating",
+      }));
       await sendCustomerOtp();
       return;
     }
@@ -398,10 +452,20 @@ const CustomerForm = () => {
       const payload = buildPayload();
 
       if (isEdit) {
+        console.log("Customer update payload", {
+          custId: Number(id),
+          email: payload.email,
+          originalEmail,
+          hasEmailChanged,
+          otpPendingEmail,
+          otpVerifiedEmail,
+          hasOtpToken: Boolean(otpToken),
+        });
+
         await updateCustomer(Number(id), {
           ...payload,
           custId: Number(id),
-        });
+        }, hasEmailChanged ? otpToken : undefined);
         showToast("Customer updated successfully", "success");
         dispatch(fetchCustomers());
         navigate("/dashboard/customers");
@@ -409,11 +473,28 @@ const CustomerForm = () => {
         await createCustomerRecord(payload, otpToken);
       }
     } catch (err: unknown) {
-      console.error(err);
+      if (isAxiosError(err)) {
+        console.error("Customer update failed", {
+          status: err.response?.status,
+          data: err.response?.data,
+          message: err.message,
+        });
+      } else {
+        console.error(err);
+      }
 
       const message = resolveErrorMessage(err, "Something went wrong");
       showToast(message, "error");
       applyFieldErrorFromMessage(message);
+      if (isVerificationIssue(message)) {
+        setErrors((prev) => ({
+          ...prev,
+          email: hasEmailChanged
+            ? "Verify the new email address before updating"
+            : message,
+        }));
+        openOtpVerification(message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -454,16 +535,18 @@ const CustomerForm = () => {
             error={errors.email}
             disabled={submitting}
           />
-          {!isEdit && (
+          {requiresEmailVerification && (
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <Button
                 size="sm"
                 variant={isEmailVerified ? "secondary" : "primary"}
                 onClick={() => void sendCustomerOtp()}
-                disabled={submitting || !normalizedEmail}
+                disabled={submitting || !normalizedEmail || verifyingOtp}
                 loading={sendingOtp}
               >
-                {isEmailVerified ? "Verify Again" : "Send OTP"}
+                {isEmailVerified
+                  ? "Verify Again"
+                  : "Send OTP"}
               </Button>
               <span
                 className={`text-sm ${
@@ -472,7 +555,9 @@ const CustomerForm = () => {
               >
                 {isEmailVerified
                   ? "Email verified"
-                  : "Email verification is required before creating the customer"}
+                  : isEdit
+                    ? "Verify the new email address before updating the customer"
+                    : "Email verification is required before creating the customer"}
               </span>
             </div>
           )}
@@ -627,6 +712,7 @@ const CustomerForm = () => {
                 mapCountry(initialState.country)
               ),
             });
+            setOriginalEmail("");
           }}
           disabled={submitting}
         >
@@ -658,7 +744,7 @@ const CustomerForm = () => {
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Enter the OTP sent to <span className="font-medium">{normalizedEmail}</span>.
+            Enter the OTP sent to <span className="font-medium">{otpPendingEmail || normalizedEmail}</span>.
           </p>
 
           <OtpForm
@@ -669,7 +755,7 @@ const CustomerForm = () => {
             submitLabel="Verify Email"
             helperText="Use the 6-digit OTP from the customer's email inbox."
             errorMessage={otpError}
-            resetKey={`${normalizedEmail}-${otpFormResetKey}`}
+            resetKey={`${otpPendingEmail || normalizedEmail}-${otpFormResetKey}`}
           />
         </div>
       </Modal>
