@@ -38,6 +38,12 @@ interface SelectOption {
   value: string;
 }
 
+interface CustomerFormProps {
+  mode?: "dashboard" | "onboarding";
+  initialEmail?: string;
+  initialOtpToken?: string;
+}
+
 const initialState: CustomerFormData = {
   custName: "",
   regId: "",
@@ -62,12 +68,17 @@ const initialState: CustomerFormData = {
   createdDate: new Date().toISOString(),
 };
 
-const CustomerForm = () => {
+const CustomerForm = ({
+  mode = "dashboard",
+  initialEmail = "",
+  initialOtpToken = "",
+}: CustomerFormProps) => {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { id } = useParams();
   const isEdit = !!id;
+  const isOnboarding = mode === "onboarding";
 
   const [form, setForm] = useState<CustomerFormData>({ ...initialState });
   const [errors, setErrors] = useState<
@@ -90,11 +101,21 @@ const CustomerForm = () => {
   const disableSave = submitting || (!isEdit && !hasDealerOptions);
   const normalizedEmail = form.email.trim().toLowerCase();
   const normalizedOriginalEmail = originalEmail.trim().toLowerCase();
+  const normalizedInitialEmail = initialEmail.trim().toLowerCase();
   const hasEmailChanged = isEdit && normalizedEmail !== normalizedOriginalEmail;
-  const requiresEmailVerification = !isEdit || hasEmailChanged;
-  const isEmailVerified =
-    !requiresEmailVerification ||
-    (Boolean(otpToken) && otpVerifiedEmail === normalizedEmail);
+  const hasOnboardingVerification =
+    isOnboarding &&
+    Boolean(initialOtpToken) &&
+    Boolean(normalizedInitialEmail) &&
+    normalizedEmail === normalizedInitialEmail;
+  const requiresEmailVerification = isOnboarding
+    ? !hasOnboardingVerification
+    : !isEdit || hasEmailChanged;
+  const isEmailVerified = isOnboarding
+    ? hasOnboardingVerification ||
+      (Boolean(otpToken) && otpVerifiedEmail === normalizedEmail)
+    : !requiresEmailVerification ||
+      (Boolean(otpToken) && otpVerifiedEmail === normalizedEmail);
 
   useEffect(() => {
     const loadDealers = async () => {
@@ -115,6 +136,23 @@ const CustomerForm = () => {
 
     loadDealers();
   }, []);
+
+  useEffect(() => {
+    if (!isOnboarding) return;
+
+    if (normalizedInitialEmail) {
+      setForm((prev) => ({
+        ...prev,
+        email: normalizedInitialEmail,
+      }));
+      setOtpVerifiedEmail(normalizedInitialEmail);
+      setOtpPendingEmail(normalizedInitialEmail);
+    }
+
+    if (initialOtpToken) {
+      setOtpToken(initialOtpToken);
+    }
+  }, [initialOtpToken, isOnboarding, normalizedInitialEmail]);
 
   useEffect(() => {
     const init = async () => {
@@ -414,7 +452,22 @@ const CustomerForm = () => {
       ...payload,
       createdDate: new Date().toISOString(),
     }, verifiedOtpToken);
-    showToast("Customer created successfully", "success");
+    showToast(
+      isOnboarding ? "Company created successfully" : "Customer created successfully",
+      "success"
+    );
+
+    if (isOnboarding) {
+      navigate("/", {
+        replace: true,
+        state: {
+          onboardingComplete: true,
+          onboardingEmail: payload.email,
+        },
+      });
+      return;
+    }
+
     dispatch(fetchCustomers());
     navigate("/dashboard/customers");
   };
@@ -533,7 +586,8 @@ const CustomerForm = () => {
             value={form.email}
             onChange={(e) => handleChange("email", e.target.value)}
             error={errors.email}
-            disabled={submitting}
+            disabled={submitting || isOnboarding}
+            readOnly={isOnboarding}
           />
           {requiresEmailVerification && (
             <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -703,16 +757,24 @@ const CustomerForm = () => {
             if (isEdit) return;
 
             const regId = await getNextRegId();
-            resetOtpVerification();
+            if (!isOnboarding) {
+              resetOtpVerification();
+            }
             setForm({
               ...initialState,
               regId,
+              email: isOnboarding ? normalizedInitialEmail : initialState.email,
               custMob: ensurePhonePrefix(
                 initialState.custMob,
                 mapCountry(initialState.country)
               ),
             });
             setOriginalEmail("");
+            if (isOnboarding) {
+              setOtpToken(initialOtpToken);
+              setOtpVerifiedEmail(normalizedInitialEmail);
+              setOtpPendingEmail(normalizedInitialEmail);
+            }
           }}
           disabled={submitting}
         >

@@ -6,6 +6,7 @@ import MainLayout from "../components/layout/MainLayout";
 import CompanyRegistrationPage from "../features/customer/pages/CustomerRegistrationPage";
 import UserCreationPage from "../features/user/pages/UserCreationPage";
 import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage";
+import OnboardingPage from "../features/auth/pages/OnboardingPage";
 import VerifyOtpPage from "../features/auth/pages/VerifyOtpPage";
 import ResetPasswordPage from "../features/auth/pages/ResetPasswordPage";
 import UserList from "../features/user/pages/UserList";
@@ -26,6 +27,8 @@ const AppRoutes = () => {
 
         {/* PUBLIC */}
         <Route path="/" element={<LoginPage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/onboarding/company" element={<CompanyRegistrationPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/verify-otp" element={<VerifyOtpPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />

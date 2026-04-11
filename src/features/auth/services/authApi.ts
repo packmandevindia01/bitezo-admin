@@ -68,3 +68,53 @@ export const verifyOtpApi = async (email: string, otp: string): Promise<string> 
 
   return extractOtpToken(response.data);
 };
+
+type AdminExistsResponse =
+  | boolean
+  | {
+      exists?: boolean;
+      userExists?: boolean;
+      isExists?: boolean;
+      data?:
+        | boolean
+        | {
+            exists?: boolean;
+            userExists?: boolean;
+            isExists?: boolean;
+          };
+    };
+
+const extractAdminExists = (payload: AdminExistsResponse): boolean => {
+  if (typeof payload === "boolean") {
+    return payload;
+  }
+
+  if (typeof payload?.data === "boolean") {
+    return payload.data;
+  }
+
+  if (typeof payload?.data === "object" && payload.data) {
+    return Boolean(payload.data.exists ?? payload.data.userExists ?? payload.data.isExists);
+  }
+
+  return Boolean(payload?.exists ?? payload?.userExists ?? payload?.isExists);
+};
+
+export const checkAdminExistsApi = async (
+  email: string,
+  otpToken?: string
+): Promise<boolean> => {
+  const response = await api.post<AdminExistsResponse>(
+    "/api/admin/auth/check-admin",
+    { email },
+    {
+      headers: otpToken
+        ? {
+            "Otp-Token": otpToken,
+          }
+        : undefined,
+    }
+  );
+
+  return extractAdminExists(response.data);
+};

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FormInput, Button } from "../../../components/common";
 import { loginApi } from "../services/authApi";
 import { useToast } from "../../../context/ToastContext";
@@ -9,6 +9,7 @@ import type { AppDispatch } from "../../../store/store";
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -16,6 +17,24 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ username: "", password: "" });
+
+  useEffect(() => {
+    const state = location.state as
+      | {
+          onboardingComplete?: boolean;
+          onboardingEmail?: string;
+        }
+      | undefined;
+
+    if (state?.onboardingEmail) {
+      setUsername(state.onboardingEmail);
+    }
+
+    if (state?.onboardingComplete) {
+      showToast("Company created successfully. Please log in.", "success");
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.pathname, location.state, navigate, showToast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,6 +132,17 @@ const LoginForm = () => {
 
       <Button type="submit" size="lg" fullWidth disabled={loading}>
         {loading ? "Logging in..." : "Login"}
+      </Button>
+
+      <Button
+        type="button"
+        variant="secondary"
+        size="lg"
+        fullWidth
+        className="mt-3"
+        onClick={() => navigate("/onboarding")}
+      >
+        Start Onboarding
       </Button>
     </form>
   );
