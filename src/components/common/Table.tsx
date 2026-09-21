@@ -4,21 +4,25 @@ import Loader from "./Loader";
 import Pagination from "./Pagination";
 
 export interface Column<T> {
-  header: string;
+  header: React.ReactNode;
   accessor: keyof T;
-  render?: (row: T) => React.ReactNode;
+  render?: (row: T, index: number) => React.ReactNode;
+  align?: "left" | "center" | "right";
 }
 
 interface TableProps<T> {
   columns: Column<T>[];
   data: T[];
   loading?: boolean;
-  rowKey?: keyof T;
+  rowKey?: keyof T | ((row: T) => string | number);
   pagination?: {
     currentPage: number;
     totalPages: number;
     onPageChange: (page: number) => void;
   };
+  onRowClick?: (row: T) => void;
+  onRowDoubleClick?: (row: T) => void;
+  rowClassName?: (row: T, index: number) => string;
 }
 
 const Table = <T,>({
@@ -27,10 +31,12 @@ const Table = <T,>({
   loading,
   rowKey,
   pagination,
+  onRowClick,
+  onRowDoubleClick,
+  rowClassName,
 }: TableProps<T>) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {loading ? (
         <div className="py-10">
           <Loader />
@@ -40,15 +46,17 @@ const Table = <T,>({
       ) : (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left border-collapse">
-
-              {/* HEADER */}
+            <table className="w-full text-sm border-collapse">
+              {/* HEADER - Rule 19: text-center by default */}
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
                   {columns.map((col, index) => (
                     <th
                       key={index}
-                      className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                      className={`
+                        px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap
+                        ${col.align === "left" ? "text-left" : col.align === "right" ? "text-right" : "text-center"}
+                      `}
                     >
                       {col.header}
                     </th>
@@ -56,32 +64,42 @@ const Table = <T,>({
                 </tr>
               </thead>
 
-              {/* BODY */}
+              {/* BODY - Rule 19: text-center by default */}
               <tbody className="divide-y divide-gray-100">
-                {data.map((row, rowIndex) => (
-                  <tr
-                    key={rowKey ? String(row[rowKey]) : rowIndex}
-                    className="group hover:bg-[#49293e]/5 transition-colors duration-150"
-                  >
-                    {columns.map((col, colIndex) => (
-                      <td
-                        key={colIndex}
-                        className={`
-                          px-5 py-3.5 text-sm text-gray-700 whitespace-nowrap
-                          ${colIndex === 0
-                            ? "font-medium text-gray-900 border-l-[3px] border-l-[#49293e] group-hover:border-l-[#6b3d5a]"
-                            : ""}
-                        `}
-                      >
-                        {col.render
-                          ? col.render(row)
-                          : (row[col.accessor] as React.ReactNode)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
+                {data.map((row, rowIndex) => {
+                  const key = typeof rowKey === "function"
+                    ? rowKey(row)
+                    : rowKey
+                      ? String(row[rowKey])
+                      : rowIndex;
 
+                  return (
+                    <tr
+                      key={key}
+                      onClick={() => onRowClick?.(row)}
+                      onDoubleClick={() => onRowDoubleClick?.(row)}
+                      className={`group hover:bg-[#49293e]/5 transition-colors duration-150 ${rowClassName?.(row, rowIndex) ?? ""} ${
+                        onRowClick || onRowDoubleClick ? "cursor-pointer" : ""
+                      }`}
+                    >
+                      {columns.map((col, colIndex) => (
+                        <td
+                          key={colIndex}
+                          className={`
+                            px-4 py-3 text-sm text-gray-700 whitespace-nowrap
+                            ${col.align === "left" ? "text-left" : col.align === "right" ? "text-right" : "text-center [&>div.flex]:justify-center"}
+                            ${colIndex === 0 ? "font-medium text-gray-900 border-l-[3px] border-l-[#49293e] group-hover:border-l-[#6b3d5a]" : ""}
+                          `}
+                        >
+                          {col.render
+                            ? col.render(row, rowIndex)
+                            : (row[col.accessor] as React.ReactNode)}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
             </table>
           </div>
 

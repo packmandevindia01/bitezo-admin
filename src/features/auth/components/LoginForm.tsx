@@ -134,16 +134,7 @@ const LoginForm = () => {
         {loading ? "Logging in..." : "Login"}
       </Button>
 
-      <Button
-        type="button"
-        variant="secondary"
-        size="lg"
-        fullWidth
-        className="mt-3"
-        onClick={() => navigate("/onboarding")}
-      >
-        Start Onboarding
-      </Button>
+     
     </form>
   );
 };

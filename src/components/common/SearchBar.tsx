@@ -6,6 +6,7 @@ interface SearchBarProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  autoFocus?: boolean;
 }
 
 const SearchBar = ({
@@ -14,6 +15,7 @@ const SearchBar = ({
   placeholder = "Search...",
   disabled,
   className = "",
+  autoFocus,
 }: SearchBarProps) => {
   return (
     <div className={`relative w-full ${className}`}>
@@ -31,6 +33,7 @@ const SearchBar = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
+        autoFocus={autoFocus}
         aria-label="Search"
         className={`
           w-full pl-9 pr-9 py-2
