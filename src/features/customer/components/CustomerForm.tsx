@@ -50,6 +50,7 @@ const initialState: CustomerFormData = {
   custMob: "+91 ",
   custTel: "",
   country: "India",
+  countryId: 0,
   block: "",
   area: "",
   road: "",

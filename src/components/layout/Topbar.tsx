@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import { useToast } from "../../context/ToastContext";
 import { useDispatch, useSelector } from "react-redux";
 import { clearCredentials } from "../../store/authSlice";
+import { logoutApi } from "../../features/auth/services/authApi";
 import type { RootState, AppDispatch } from "../../store/store";
 
 interface TopbarProps {
@@ -58,10 +59,16 @@ const Topbar = ({ toggleSidebar }: TopbarProps) => {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
-  const handleLogout = () => {
-    dispatch(clearCredentials());
-    showToast("Logged out successfully 👋", "success");
-    navigate("/", { replace: true });
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } catch {
+      // Ignore network errors on logout
+    } finally {
+      dispatch(clearCredentials());
+      showToast("Logged out successfully 👋", "success");
+      navigate("/", { replace: true });
+    }
   };
 
   return (

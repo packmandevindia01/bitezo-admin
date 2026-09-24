@@ -30,18 +30,18 @@ const DashboardPage = () => {
   }, []);
 
   // Sum of last_6_months counts = "recent activity" stat
-  const last6Total = data?.last_6_months.reduce((acc, m) => acc + m.count, 0) ?? 0;
+  const last6Total = data?.last_6_months?.reduce((acc, m) => acc + m.count, 0) ?? 0;
 
   // Simple trend: compare last month vs month before
-  const computeTrend = (months: DashboardData["last_6_months"]) => {
-    if (months.length < 2) return undefined;
+  const computeTrend = (months?: DashboardData["last_6_months"]) => {
+    if (!months || months.length < 2) return undefined;
     const last = months[months.length - 1].count;
     const prev = months[months.length - 2].count;
     if (prev === 0) return last > 0 ? 100 : 0;
     return Math.round(((last - prev) / prev) * 100);
   };
 
-  const trend = data ? computeTrend(data.last_6_months) : undefined;
+  const trend = data?.last_6_months ? computeTrend(data.last_6_months) : undefined;
 
   if (error) {
     return (
@@ -73,7 +73,7 @@ const DashboardPage = () => {
 
         <StatCard
           title="Total Customers"
-          value={loading ? "—" : data!.customers}
+          value={loading ? "—" : (data?.customers ?? 0)}
           icon={<Users size={20} />}
           color="#6366f1"
           bgColor="#eef2ff"
@@ -83,7 +83,7 @@ const DashboardPage = () => {
 
         <StatCard
           title="Demo Customers"
-          value={loading ? "—" : data!.customers_demo}
+          value={loading ? "—" : (data?.customers_demo ?? 0)}
           icon={<UserCheck size={20} />}
           color="#f59e0b"
           bgColor="#fffbeb"
@@ -93,7 +93,7 @@ const DashboardPage = () => {
 
         <StatCard
           title="Inactive Customers"
-          value={loading ? "—" : data!.customers_inactive}
+          value={loading ? "—" : (data?.customers_inactive ?? 0)}
           icon={<UserX size={20} />}
           color="#ef4444"
           bgColor="#fef2f2"

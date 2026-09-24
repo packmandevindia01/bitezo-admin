@@ -120,14 +120,14 @@ const ReportsPage = () => {
         </div>
       </div>
 
-      {/* CUSTOMER REPORT LIST (Swagger: /api/admin/customer/rptlist) */}
+      {/* CUSTOMER REPORT LIST (Swagger: /api/Customer/rptlist) */}
       <div className="space-y-3">
         <div className="bg-white p-4 rounded-xl shadow-md">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <h2 className="font-semibold">Customer Report List</h2>
               <p className="text-sm text-gray-500">
-                Filters match Swagger params for <span className="font-mono">/api/admin/customer/rptlist</span>
+                Filters match Swagger params for <span className="font-mono">/api/Customer/rptlist</span>
               </p>
             </div>
 

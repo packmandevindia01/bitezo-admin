@@ -3,9 +3,11 @@ export interface Dealer {
   name: string;
   mobNo: string;
   email: string;
-  country: string;
+  countryId?: number;
+  country?: string;
   isActive: boolean;
   createdDate: string; // ISO string
+  modifiedDate?: string;
 }
 
 export interface DealerFormData {
@@ -13,21 +15,29 @@ export interface DealerFormData {
   mobNo: string;
   email: string;
   country: string;
+  countryId: number;
   isActive: boolean;
   createdDate: string; // ISO string
+  modifiedDate?: string;
 }
 
 export interface CreateDealerPayload {
   name: string;
   mobNo: string;
   email: string;
-  country: string;
+  countryId: number;
   isActive: boolean;
   createdDate: string; // ISO string
 }
 
-export interface UpdateDealerPayload extends CreateDealerPayload {
+export interface UpdateDealerPayload {
   dealerId: number;
+  name: string;
+  mobNo: string;
+  email: string;
+  countryId: number;
+  isActive: boolean;
+  modifiedDate: string;
 }
 
 export interface DealerApiResponse {
@@ -35,4 +45,5 @@ export interface DealerApiResponse {
   message: string;
   data: unknown;
 }
+
 

@@ -5,12 +5,13 @@ import type { Employee } from "../types";
 
 interface Props {
   employees: Employee[];
+  loading?: boolean;
   onEdit: (employee: Employee) => void;
   onDelete: (id: number) => void;
   onAdd: () => void;
 }
 
-const EmployeeTable = ({ employees, onEdit, onDelete, onAdd }: Props) => {
+const EmployeeTable = ({ employees, loading, onEdit, onDelete, onAdd }: Props) => {
   const columns: Column<Employee>[] = [
     { header: "#", accessor: "empId" },
     { header: "Name", accessor: "name" },
@@ -59,7 +60,7 @@ const EmployeeTable = ({ employees, onEdit, onDelete, onAdd }: Props) => {
         <h2 className="font-semibold text-lg">Employees</h2>
         <Button onClick={onAdd}>+ Add Employee</Button>
       </div>
-      <Table columns={columns} data={employees} />
+      <Table columns={columns} data={employees} loading={loading} />
     </div>
   );
 };

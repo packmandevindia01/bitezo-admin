@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormInput, Button, SelectInput, Checkbox } from "../../../components/common";
 import { COUNTRY_OPTIONS, MOBILE_PLACEHOLDERS } from "../../../constants/formOptions";
 import { isRequired, isValidEmail, isValidMobile } from "../../../utils/validators";
 import { getCountryName, mapCountry } from "../../../utils/countryMapper";
+import { getCountryList } from "../../customer/services/customerApi";
 import type { Employee, EmployeeFormData } from "../types";
 import type { SelectOption } from "../../../constants/formOptions";
 
@@ -19,6 +20,7 @@ const initialState: EmployeeFormData = {
   mobNo: "",
   email: "",
   country: "",
+  countryId: 0,
   dealerId: 0,
   isActive: true,
 };
@@ -28,6 +30,7 @@ const createInitialState = (initialData?: Employee | null): EmployeeFormData => 
   mobNo: initialData?.mobNo ?? initialState.mobNo,
   email: initialData?.email ?? initialState.email,
   country: initialData?.country ? getCountryName(initialData.country) : initialState.country,
+  countryId: initialData?.countryId ?? 0,
   dealerId: initialData?.dealerId ?? initialState.dealerId,
   isActive: initialData?.isActive ?? initialState.isActive,
 });
@@ -41,12 +44,47 @@ const EmployeeForm = ({
 }: Props) => {
   const [form, setForm] = useState<EmployeeFormData>(() => createInitialState(initialData));
   const [errors, setErrors] = useState<Partial<Record<keyof EmployeeFormData, string>>>({});
+  const [countryOptions, setCountryOptions] = useState(COUNTRY_OPTIONS);
+  const [countryMap, setCountryMap] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const loadCountries = async () => {
+      try {
+        const list = await getCountryList();
+        if (list && list.length > 0) {
+          const map: Record<string, number> = {};
+          const opts = list.map((c) => {
+            map[c.countryName.toLowerCase()] = c.countryId;
+            return {
+              label: c.countryName,
+              value: c.countryName,
+            };
+          });
+          setCountryMap(map);
+          setCountryOptions(opts);
+        }
+      } catch {
+        // keep default
+      }
+    };
+    loadCountries();
+  }, []);
 
   const handleChange = (
     key: keyof EmployeeFormData,
     value: EmployeeFormData[keyof EmployeeFormData]
   ) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    if (key === "country") {
+      const countryName = String(value);
+      const cid = countryMap[countryName.toLowerCase()] ?? 0;
+      setForm((prev) => ({
+        ...prev,
+        country: countryName,
+        countryId: cid,
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, [key]: value }));
+    }
     setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
@@ -87,7 +125,6 @@ const EmployeeForm = ({
   return (
     <>
       <div className="flex flex-col gap-4">
-
         <FormInput
           label="Name"
           required
@@ -98,21 +135,11 @@ const EmployeeForm = ({
         />
 
         <SelectInput
-          label="Dealer"
-          required
-          value={form.dealerId ? String(form.dealerId) : ""}
-          onChange={(e) => handleChange("dealerId", Number(e.target.value))}
-          options={dealerOptions}
-          error={errors.dealerId}
-          placeholder="Select dealer"
-        />
-
-        <SelectInput
           label="Country"
           required
           value={form.country}
           onChange={(e) => handleChange("country", e.target.value)}
-          options={COUNTRY_OPTIONS}
+          options={countryOptions}
           error={errors.country}
         />
 
@@ -137,7 +164,15 @@ const EmployeeForm = ({
           error={errors.email}
         />
 
-        {/* Checkbox */}
+        <SelectInput
+          label="Dealer"
+          required
+          value={String(form.dealerId || "")}
+          onChange={(e) => handleChange("dealerId", Number(e.target.value))}
+          options={dealerOptions}
+          error={errors.dealerId}
+        />
+
         <div className="flex justify-center mt-1">
           <Checkbox
             label="Is Active"
@@ -145,16 +180,16 @@ const EmployeeForm = ({
             onChange={(e) => handleChange("isActive", e.target.checked)}
           />
         </div>
-
       </div>
 
-      {/* Buttons */}
       <div className="flex gap-3 mt-6 justify-center">
         <Button variant="secondary" onClick={handleClear}>
           Clear
         </Button>
-        <Button onClick={handleSubmit}>{isEdit ? "Save" : "Create"}</Button>
-        {onDelete && (
+        <Button onClick={handleSubmit}>
+          {isEdit ? "Save" : "Create"}
+        </Button>
+        {isEdit && onDelete && (
           <Button variant="danger" onClick={onDelete}>
             Delete
           </Button>

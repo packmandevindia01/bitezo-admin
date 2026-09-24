@@ -48,7 +48,7 @@ export const getCustomerReport = async (
   params: CustomerRptListParams
 ): Promise<CustomerRptListRow[]> => {
   try {
-    const response = await api.get("/api/admin/customer/rptlist", {
+    const response = await api.get("/api/Customer/rptlist", {
       params: {
         country: params.country || "All",
         isDemo: params.isDemo || "All",

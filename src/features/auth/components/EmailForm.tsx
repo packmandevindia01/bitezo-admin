@@ -4,9 +4,10 @@ import { isValidEmail } from "../../../utils/validators";
 
 interface Props {
   onSubmit: (email: string) => void;
+  loading?: boolean;
 }
 
-const EmailForm = ({ onSubmit }: Props) => {
+const EmailForm = ({ onSubmit, loading = false }: Props) => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
@@ -27,7 +28,6 @@ const EmailForm = ({ onSubmit }: Props) => {
 
   return (
     <div className="flex flex-col gap-4">
-
       <FormInput
         label="Email Address"
         type="email"
@@ -36,13 +36,11 @@ const EmailForm = ({ onSubmit }: Props) => {
         onChange={(e) => setEmail(e.target.value)}
         error={error}
       />
-
-      <Button onClick={handleSubmit} className="w-full">
+      <Button onClick={handleSubmit} className="w-full" loading={loading}>
         Send OTP
       </Button>
-
     </div>
   );
 };
 
-export default EmailForm;
+export default EmailForm;

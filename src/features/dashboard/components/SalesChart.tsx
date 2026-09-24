@@ -18,10 +18,21 @@ interface Props {
 
 type Range = 6 | 12;
 
+// Format "2026-01" → "Jan '26" or preserve existing string
 const formatMonth = (raw: string) => {
-  const [year, month] = raw.split("-");
-  const date = new Date(Number(year), Number(month) - 1);
-  return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+  if (!raw) return "";
+  if (raw.includes("-")) {
+    const parts = raw.split("-");
+    if (parts.length >= 2) {
+      const year = Number(parts[0]);
+      const month = Number(parts[1]);
+      if (!isNaN(year) && !isNaN(month)) {
+        const date = new Date(year, month - 1);
+        return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+      }
+    }
+  }
+  return raw;
 };
 
 const CustomTooltip = ({ active, payload, label }: any) => {

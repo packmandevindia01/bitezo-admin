@@ -5,11 +5,12 @@ import type { Dealer } from "../types";
 
 interface Props {
   dealers: Dealer[];
+  loading?: boolean;
   onEdit: (dealer: Dealer) => void;
   onAdd: () => void;
 }
 
-const DealerTable = ({ dealers, onEdit, onAdd }: Props) => {
+const DealerTable = ({ dealers, loading, onEdit, onAdd }: Props) => {
   const columns: Column<Dealer>[] = [
     { header: "#", accessor: "dealerId" },
     { header: "Name", accessor: "name" },
@@ -54,7 +55,7 @@ const DealerTable = ({ dealers, onEdit, onAdd }: Props) => {
           Add Dealer
         </Button>
       </div>
-      <Table columns={columns} data={dealers} />
+      <Table columns={columns} data={dealers} loading={loading} />
     </div>
   );
 };

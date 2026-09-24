@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "../../../context/ToastContext";
-import { Loader, Button, Modal, FilterPanel, PageIntro } from "../../../components/common";
+import { Button, Modal, FilterPanel, PageIntro } from "../../../components/common";
 import { COUNTRY_FILTER_OPTIONS } from "../../../constants/formOptions";
 import EmployeeTable from "../components/EmployeeTable";
 import EmployeeForm from "../components/EmployeeForm";
@@ -13,6 +13,7 @@ import {
 } from "../services/employeeApi";
 import type { Employee, EmployeeFormData } from "../types";
 import { getDealerListName } from "../../dealer/services/dealerApi";
+import { getCountryList } from "../../customer/services/customerApi";
 import type { SelectOption } from "../../../constants/formOptions";
 
 const initialFilters = {
@@ -39,15 +40,45 @@ const EmployeeList = () => {
   const [dealerFilterOptions, setDealerFilterOptions] = useState<SelectOption[]>([
     { label: "All", value: "All" },
   ]);
+  const [countryFilterOptions, setCountryFilterOptions] = useState(COUNTRY_FILTER_OPTIONS);
+  const [countryMap, setCountryMap] = useState<Record<string, number>>({});
   const [filters, setFilters] = useState(initialFilters);
+
+  useEffect(() => {
+    const loadCountries = async () => {
+      try {
+        const list = await getCountryList();
+        if (list && list.length > 0) {
+          const map: Record<string, number> = {};
+          const opts = [
+            { label: "All", value: "All" },
+            ...list.map((c) => {
+              map[c.countryName.toLowerCase()] = c.countryId;
+              return { label: c.countryName, value: c.countryName };
+            }),
+          ];
+          setCountryMap(map);
+          setCountryFilterOptions(opts);
+        }
+      } catch {
+        // keep default
+      }
+    };
+    loadCountries();
+  }, []);
 
   const fetchEmployees = async (params: typeof initialFilters) => {
     setLoading(true);
     try {
+      const cid =
+        params.country && params.country !== "All"
+          ? countryMap[params.country.toLowerCase()]
+          : undefined;
+
       const data = await getEmployees({
-        empName: params.empName || undefined,
+        empName: params.empName?.trim() || undefined,
         dealerId: params.dealerId !== "All" ? Number(params.dealerId) : undefined,
-        country: params.country,
+        countryId: cid,
       });
       setEmployees(data);
     } catch (err: any) {
@@ -63,8 +94,7 @@ const EmployeeList = () => {
       fetchEmployees(filters);
     }, 400);
     return () => window.clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.empName, filters.dealerId, filters.country]);
+  }, [filters.empName, filters.dealerId, filters.country, countryMap]);
 
   useEffect(() => {
     const fetchDealers = async () => {
@@ -94,10 +124,7 @@ const EmployeeList = () => {
 
   const handleCreate = async (data: EmployeeFormData) => {
     try {
-      await createEmployee({
-        ...data,
-        createdDate: new Date().toISOString(),
-      });
+      await createEmployee(data);
       showToast("Employee created successfully", "success");
       setCreateOpen(false);
       fetchEmployees(filters);
@@ -106,23 +133,20 @@ const EmployeeList = () => {
     }
   };
 
-  const handleEditOpen = async (empId: number) => {
+  const handleEdit = async (id: number) => {
     try {
-      setLoading(true);
-      const fullEmployee = await getEmployeeById(empId);
-      setEditEmployee(fullEmployee);
+      const employee = await getEmployeeById(id);
+      setEditEmployee(employee);
       setEditOpen(true);
     } catch (err: any) {
-      showToast(err?.response?.data?.message || "Failed to load employee details", "error");
-    } finally {
-      setLoading(false);
+      showToast(err?.response?.data?.message || "Failed to fetch employee", "error");
     }
   };
 
-  const handleEdit = async (data: EmployeeFormData) => {
+  const handleUpdate = async (data: EmployeeFormData) => {
     if (!editEmployee) return;
     try {
-      await updateEmployee({ empId: editEmployee.empId, ...data });
+      await updateEmployee(editEmployee.empId, data);
       showToast("Employee updated successfully", "success");
       setEditOpen(false);
       setEditEmployee(null);
@@ -132,101 +156,93 @@ const EmployeeList = () => {
     }
   };
 
-  const confirmDelete = async () => {
-    if (deleteId === null) return;
+  const handleDelete = async () => {
+    if (!deleteId) return;
     try {
       await deleteEmployee(deleteId);
       showToast("Employee deleted successfully", "success");
+      setDeleteId(null);
+      setEditOpen(false);
+      setEditEmployee(null);
       fetchEmployees(filters);
     } catch (err: any) {
       showToast(err?.response?.data?.message || "Failed to delete", "error");
-    } finally {
-      setDeleteId(null);
     }
   };
 
   return (
-    <>
-      {loading && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <Loader />
+    <div className="space-y-6">
+      <PageIntro
+        title="Employees"
+        description="Manage your staff and team members across all dealerships"
+      />
+
+      <FilterPanel
+        onReset={() => {
+          setFilters(initialFilters);
+          fetchEmployees(initialFilters);
+        }}
+      >
+        <div>
+          <label className={labelClass}>Search</label>
+          <input
+            type="text"
+            placeholder="Search by name..."
+            className={inputClass}
+            value={filters.empName}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, empName: e.target.value }))
+            }
+          />
         </div>
-      )}
 
-      <div className="space-y-4">
-        <PageIntro
-          title="Employees"
-          description="Search and manage employee records"
-        />
+        <div>
+          <label className={labelClass}>Dealer</label>
+          <select
+            className={inputClass}
+            value={filters.dealerId}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, dealerId: e.target.value }))
+            }
+          >
+            {dealerFilterOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <FilterPanel
-          onReset={() => setFilters(initialFilters)}
-          resetDisabled={loading}
-        >
-          <div>
-            <label className={labelClass}>Employee Name</label>
-            <input
-              className={inputClass}
-              value={filters.empName}
-              placeholder="Search by employee name..."
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, empName: e.target.value }))
-              }
-              disabled={loading}
-            />
-          </div>
+        <div>
+          <label className={labelClass}>Country</label>
+          <select
+            className={inputClass}
+            value={filters.country}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, country: e.target.value }))
+            }
+          >
+            {countryFilterOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </FilterPanel>
 
-          <div>
-            <label className={labelClass}>Dealer</label>
-            <select
-              className={inputClass}
-              value={filters.dealerId}
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, dealerId: e.target.value }))
-              }
-              disabled={loading}
-            >
-              {dealerFilterOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className={labelClass}>Country</label>
-            <select
-              className={inputClass}
-              value={filters.country}
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, country: e.target.value }))
-              }
-              disabled={loading}
-            >
-              {COUNTRY_FILTER_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </FilterPanel>
-
-        <EmployeeTable
-          employees={employees}
-          onEdit={(emp) => {
-            handleEditOpen(emp.empId);
-          }}
-          onDelete={(id) => setDeleteId(id)}
-          onAdd={() => setCreateOpen(true)}
-        />
-      </div>
+      <EmployeeTable
+        employees={employees}
+        loading={loading}
+        onAdd={() => setCreateOpen(true)}
+        onEdit={(emp) => handleEdit(emp.empId)}
+        onDelete={(id) => setDeleteId(id)}
+      />
 
       <Modal
         isOpen={createOpen}
         onClose={() => setCreateOpen(false)}
-        title="Add Employee"
+        title="Create Employee"
       >
         <EmployeeForm
           onSubmit={handleCreate}
@@ -240,40 +256,37 @@ const EmployeeList = () => {
           setEditOpen(false);
           setEditEmployee(null);
         }}
-        title={`Edit Employee - ${editEmployee?.name ?? ""}`}
+        title="Edit Employee"
       >
         <EmployeeForm
           initialData={editEmployee}
-          onSubmit={handleEdit}
+          onSubmit={handleUpdate}
           dealerOptions={dealerOptions}
-          onDelete={() => {
-            setEditOpen(false);
-            setDeleteId(editEmployee!.empId);
-          }}
-          isEdit={true}
+          onDelete={() => editEmployee && setDeleteId(editEmployee.empId)}
+          isEdit
         />
       </Modal>
 
       <Modal
         isOpen={deleteId !== null}
         onClose={() => setDeleteId(null)}
-        title="Confirm Delete"
+        title="Delete Employee"
       >
-        <div className="text-center space-y-4">
-          <p className="text-gray-700">
-            Are you sure you want to delete this employee?
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Are you sure you want to delete this employee? This action cannot be undone.
           </p>
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-end gap-3">
             <Button variant="secondary" onClick={() => setDeleteId(null)}>
               Cancel
             </Button>
-            <Button variant="danger" onClick={confirmDelete}>
+            <Button variant="danger" onClick={handleDelete}>
               Delete
             </Button>
           </div>
         </div>
       </Modal>
-    </>
+    </div>
   );
 };
 

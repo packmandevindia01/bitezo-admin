@@ -1,13 +1,15 @@
 import api from "../../../utils/api";
 import type {
   Dealer,
+  DealerFormData,
   CreateDealerPayload,
+  UpdateDealerPayload,
   DealerApiResponse,
 } from "../types";
-import { getCountryName } from "../../../utils/countryMapper";
 
 export interface DealerListParams {
   dealerName?: string;
+  countryId?: number;
   country?: string;
 }
 
@@ -16,7 +18,6 @@ export interface DealerNameOption {
   dealerName: string;
 }
 
-// ── Helper to parse isActive from any backend format ─────────────────────────
 const parseIsActive = (val: unknown): boolean => {
   if (typeof val === "boolean") return val;
   if (typeof val === "string") {
@@ -26,29 +27,38 @@ const parseIsActive = (val: unknown): boolean => {
   return false;
 };
 
-// ── CREATE ────────────────────────────────────────────────────────────────────
+// ── CREATE: POST /api/Dealer ─────────────────────────────────────────────────
 export const createDealer = async (
-  data: CreateDealerPayload
+  data: DealerFormData
 ): Promise<DealerApiResponse> => {
-  const payload = {
-    ...data,
-    country: getCountryName(data.country),
+  const payload: CreateDealerPayload = {
+    name: data.name,
+    mobNo: data.mobNo,
+    email: data.email,
+    countryId: Number(data.countryId) || 0,
+    isActive: Boolean(data.isActive),
+    createdDate: data.createdDate || new Date().toISOString(),
   };
 
-  const response = await api.post("/api/admin/dealer", payload);
+  const response = await api.post("/api/Dealer", payload);
   return response.data;
 };
 
-// ── GET LIST ──────────────────────────────────────────────────────────────────
+// ── GET LIST: GET /api/Dealer/list ───────────────────────────────────────────
 export const getDealers = async (
   params: DealerListParams = {}
 ): Promise<Dealer[]> => {
   try {
-    const response = await api.get("/api/admin/dealer/list", {
-      params: {
-        ...(params.dealerName ? { dealerName: params.dealerName } : {}),
-        ...(params.country ? { country: params.country } : {}),
-      },
+    const queryParams: Record<string, unknown> = {};
+    if (params.dealerName?.trim()) {
+      queryParams.dealerName = params.dealerName.trim();
+    }
+    if (params.countryId !== undefined && params.countryId !== null && Number(params.countryId) > 0) {
+      queryParams.countryId = Number(params.countryId);
+    }
+
+    const response = await api.get("/api/Dealer/list", {
+      params: queryParams,
     });
 
     const body = response.data;
@@ -66,10 +76,12 @@ export const getDealers = async (
       name: (item.name as string | undefined) ?? "",
       mobNo: (item.mobNo as string | undefined) ?? "",
       email: (item.email as string | undefined) ?? "",
-      country: (item.country as string | undefined) ?? "",
-      isActive: parseIsActive(item.isActive), // ✅ handles "Active", "true", true
+      countryId: (item.countryId as number | undefined) ?? 0,
+      country: (item.country as string | undefined) ?? (item.countryName as string | undefined) ?? "",
+      isActive: parseIsActive(item.isActive),
       createdDate:
         (item.createdDate as string | undefined) ?? new Date().toISOString(),
+      modifiedDate: (item.modifiedDate as string | undefined) ?? undefined,
     }));
   } catch (err: unknown) {
     const maybe = err as {
@@ -86,6 +98,7 @@ export const getDealers = async (
 
     if (
       status === 404 ||
+      String(message).toLowerCase().includes("no dealers") ||
       String(message).toLowerCase().includes("no customers")
     ) {
       return [];
@@ -94,10 +107,10 @@ export const getDealers = async (
   }
 };
 
-// ── GET BY ID ─────────────────────────────────────────────────────────────────
+// ── GET BY ID: GET /api/Dealer/{dealerId} ────────────────────────────────────
 export const getDealerById = async (dealerId: number): Promise<Dealer> => {
-  const response = await api.get(`/api/admin/dealer/${dealerId}`);
-  const item = (response.data ?? {}) as Record<string, unknown>;
+  const response = await api.get("/api/Dealer/" + dealerId);
+  const item = (response.data?.data ?? response.data ?? {}) as Record<string, unknown>;
 
   return {
     dealerId:
@@ -105,35 +118,38 @@ export const getDealerById = async (dealerId: number): Promise<Dealer> => {
     name: (item.name as string | undefined) ?? "",
     mobNo: (item.mobNo as string | undefined) ?? "",
     email: (item.email as string | undefined) ?? "",
-    country: (item.country as string | undefined) ?? "",
-    isActive: parseIsActive(item.isActive), // ✅ fixed
+    countryId: (item.countryId as number | undefined) ?? 0,
+    country: (item.country as string | undefined) ?? (item.countryName as string | undefined) ?? "",
+    isActive: parseIsActive(item.isActive),
     createdDate:
       (item.createdDate as string | undefined) ?? new Date().toISOString(),
+    modifiedDate: (item.modifiedDate as string | undefined) ?? undefined,
   };
 };
 
-// ── UPDATE ────────────────────────────────────────────────────────────────────
+// ── UPDATE: PUT /api/Dealer/{dealerId} ───────────────────────────────────────
 export const updateDealer = async (
   dealerId: number,
-  data: CreateDealerPayload
+  data: DealerFormData
 ): Promise<DealerApiResponse> => {
-  const payload = {
+  const payload: UpdateDealerPayload = {
     dealerId,
     name: data.name,
     mobNo: data.mobNo,
     email: data.email,
-    country: getCountryName(data.country),
+    countryId: Number(data.countryId) || 0,
     isActive: Boolean(data.isActive),
-    createdDate: data.createdDate,
+    modifiedDate: new Date().toISOString(),
   };
 
-  const response = await api.put(`/api/admin/dealer/${dealerId}`, payload);
+  const response = await api.put("/api/Dealer/" + dealerId, payload);
   return response.data;
 };
 
+// ── LIST NAME: GET /api/Dealer/listname ──────────────────────────────────────
 export const getDealerListName = async (): Promise<DealerNameOption[]> => {
   try {
-    const response = await api.get("/api/admin/dealer/listname");
+    const response = await api.get("/api/Dealer/listname");
     const body = response.data;
     const list = Array.isArray(body)
       ? body

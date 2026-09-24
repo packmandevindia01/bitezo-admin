@@ -1,42 +1,68 @@
 // src/features/user/services/userApi.ts
 import api from "../../../utils/api";
-import type { CreateUserPayload, CreateUserResponse,UpdateUserPayload, User } from "../types";
+import type {
+  CreateUserPayload,
+  CreateUserResponse,
+  UpdateUserPayload,
+  UpdatePasswordPayload,
+  User,
+} from "../types";
 
 // ✅ CREATE USER
 export const createUser = async (
   data: CreateUserPayload
 ): Promise<CreateUserResponse> => {
-  const response = await api.post("/api/admin/user", data);
+  const response = await api.post("/api/User", data);
   return response.data;
 };
 
 // ✅ GET ALL USERS
 export const getUsers = async (): Promise<User[]> => {
-  const response = await api.get("/api/admin/user/list");
+  const response = await api.get("/api/User/list");
 
-  return response.data.map((item: any) => ({
+  const list = Array.isArray(response.data)
+    ? response.data
+    : Array.isArray(response.data?.data)
+      ? response.data.data
+      : [];
+
+  return list.map((item: any) => ({
     id: item.userId,
     name: item.userName,
     email: item.email || "",
-    active: item.status === "Active",
-    isMaster: false, // backend doesn't provide this field
+    active: item.isActive ?? item.status === "Active",
+    isMaster: Boolean(item.isMaster),
   }));
 };
 
-// ✅ UPDATE USER
+// ✅ GET USER BY ID: GET /api/User/{userId}
+export const getUserById = async (userId: number): Promise<User> => {
+  const response = await api.get(`/api/User/${userId}`);
+  const item = response.data?.data ?? response.data ?? {};
+  return {
+    id: item.userId ?? item.id ?? userId,
+    name: item.userName ?? item.name ?? "",
+    email: item.email || "",
+    active: item.isActive !== undefined ? Boolean(item.isActive) : Boolean(item.status === "Active"),
+    isMaster: Boolean(item.isMaster),
+  };
+};
+
+// ✅ UPDATE USER: PUT /api/User/{userId}
 export const updateUser = async (
   data: UpdateUserPayload
 ): Promise<CreateUserResponse> => {
-  const response = await api.put("/api/admin/user", data);
+  const response = await api.put(`/api/User/${data.userId}`, data);
   return response.data;
 };
 
+// ✅ UPDATE PASSWORD: PUT /api/User/{userId}/update-password
 export const changePassword = async (
   userId: number,
-  data: { currentPassword: string; newPassword: string }
+  data: UpdatePasswordPayload
 ): Promise<void> => {
   const response = await api.put(
-    `/api/admin/user/${userId}/update-password`,
+    `/api/User/${userId}/update-password`,
     data
   );
   return response.data;

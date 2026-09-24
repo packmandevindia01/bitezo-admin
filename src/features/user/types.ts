@@ -43,3 +43,9 @@
     isActive: boolean;
     isMaster: boolean;
   }
+
+  // ✅ UPDATE PASSWORD PAYLOAD
+  export interface UpdatePasswordPayload {
+    currentPassword: string;
+    newPassword: string;
+  }

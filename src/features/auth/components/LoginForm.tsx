@@ -67,8 +67,8 @@ const LoginForm = () => {
           user: {
             userId: data.user.userId,
             userName: data.user.userName,
-            email: data.user.email,
-            isMaster: data.user.isMaster,
+            email: data.user.email ?? "",
+            isMaster: Boolean(data.user.isMaster),
           },
         })
       );

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { FormInput, Button, SelectInput, Checkbox } from "../../../components/common";
-import { COUNTRY_OPTIONS, MOBILE_PLACEHOLDERS } from "../../../constants/formOptions";
-import { isRequired, isValidEmail, isValidMobile } from "../../../utils/validators";
-import { getCountryName, mapCountry } from "../../../utils/countryMapper";
+import { MOBILE_PLACEHOLDERS } from "../../../constants/formOptions";
+import { isRequired, isValidEmail } from "../../../utils/validators";
+import { mapCountry } from "../../../utils/countryMapper";
+import { getCountryList } from "../../customer/services/customerApi";
 import type { Dealer, DealerFormData } from "../types";
+import type { SelectOption } from "../../../constants/formOptions";
 
 interface Props {
   initialData?: Dealer | null;
@@ -11,11 +13,17 @@ interface Props {
   isEdit?: boolean;
 }
 
+interface CountryItem {
+  countryId: number;
+  countryName: string;
+}
+
 const initialState: DealerFormData = {
   name: "",
   mobNo: "",
   email: "",
   country: "",
+  countryId: 0,
   isActive: true,
   createdDate: new Date().toISOString(),
 };
@@ -41,19 +49,67 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
   const [form, setForm] = useState<DealerFormData>({ ...initialState });
   const [errors, setErrors] = useState<Partial<Record<keyof DealerFormData, string>>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [countryList, setCountryList] = useState<CountryItem[]>([]);
+  const [countryOptions, setCountryOptions] = useState<SelectOption[]>([]);
+
+  useEffect(() => {
+    const loadCountries = async () => {
+      try {
+        const list = await getCountryList();
+        if (list && list.length > 0) {
+          const items: CountryItem[] = list.map((c) => ({
+            countryId: c.countryId,
+            countryName: c.countryName || "",
+          }));
+          setCountryList(items);
+          setCountryOptions(
+            items.map((c) => ({
+              label: c.countryName,
+              value: String(c.countryId),
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to load country list", err);
+      }
+    };
+    loadCountries();
+  }, []);
 
   useEffect(() => {
     if (initialData) {
+      let cid = initialData.countryId ?? 0;
+      let cname = initialData.country ?? "";
+
+      if (!cid && cname && countryList.length > 0) {
+        const found = countryList.find(
+          (c) =>
+            c.countryName.toLowerCase() === cname.toLowerCase() ||
+            c.countryName.toLowerCase().includes(cname.toLowerCase()) ||
+            cname.toLowerCase().includes(c.countryName.toLowerCase())
+        );
+        if (found) {
+          cid = found.countryId;
+          cname = found.countryName;
+        }
+      } else if (cid && countryList.length > 0) {
+        const found = countryList.find((c) => c.countryId === cid);
+        if (found) {
+          cname = found.countryName;
+        }
+      }
+
       setForm({
         name: initialData.name,
         mobNo: initialData.mobNo,
         email: initialData.email,
-        country: getCountryName(initialData.country),
+        country: cname,
+        countryId: cid,
         isActive: initialData.isActive,
         createdDate: initialData.createdDate,
       });
     }
-  }, [initialData]);
+  }, [initialData, countryList]);
 
   const handleChange = (
     key: keyof DealerFormData,
@@ -76,14 +132,17 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
 
     if (!isRequired(form.mobNo)) {
       newErrors.mobNo = "Mobile number is required";
-    } else if (form.country && !isValidMobile(form.mobNo, mapCountry(form.country))) {
-      newErrors.mobNo = "Invalid mobile number";
     }
 
-    if (!isRequired(form.email)) newErrors.email = "Email is required";
-    else if (!isValidEmail(form.email)) newErrors.email = "Invalid email";
+    if (!isRequired(form.email)) {
+      newErrors.email = "Email is required";
+    } else if (form.email.includes("@") && !isValidEmail(form.email)) {
+      newErrors.email = "Invalid email";
+    }
 
-    if (!isRequired(form.country)) newErrors.country = "Country is required";
+    if (!form.countryId || form.countryId === 0) {
+      newErrors.country = "Country is required";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -102,10 +161,6 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
 
   return (
     <>
-      {/*
-        Note: we keep `createdDate` in the payload (swagger requires it).
-        It's set automatically on create, and read-only when editing.
-      */}
       <div className="flex flex-col gap-4">
         <FormInput
           label="Name"
@@ -120,9 +175,19 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
         <SelectInput
           label="Country"
           required
-          value={form.country}
-          onChange={(e) => handleChange("country", e.target.value)}
-          options={COUNTRY_OPTIONS}
+          placeholder="Select Country"
+          value={form.countryId > 0 ? String(form.countryId) : ""}
+          onChange={(e) => {
+            const cid = Number(e.target.value) || 0;
+            const matched = countryList.find((c) => c.countryId === cid);
+            setForm((prev) => ({
+              ...prev,
+              countryId: cid,
+              country: matched ? matched.countryName : "",
+            }));
+            setErrors((prev) => ({ ...prev, country: "" }));
+          }}
+          options={countryOptions}
           error={errors.country}
           disabled={submitting}
         />
@@ -133,7 +198,7 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
           placeholder={
             form.country
               ? MOBILE_PLACEHOLDERS[mapCountry(form.country)] ?? "+91 9876543210"
-              : "Select country first"
+              : "Enter mobile number"
           }
           value={form.mobNo}
           onChange={(e) => handleChange("mobNo", e.target.value)}
@@ -180,4 +245,3 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
 };
 
 export default DealerForm;
-

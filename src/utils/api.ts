@@ -31,6 +31,14 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      const isLoginRequest =
+        originalRequest.url?.includes("/api/Auth/login") ||
+        originalRequest.url?.includes("/api/auth/login");
+
+      if (isLoginRequest) {
+        return Promise.reject(error);
+      }
+
       const refreshToken = store.getState().auth.refreshToken;
 
       // ✅ If no refresh token (e.g. login page), just reject — don't redirect
@@ -40,7 +48,7 @@ api.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          `${BASE_URL}/api/auth/refresh`,
+          `${BASE_URL}/api/Auth/refresh`,
           {},
           {
             headers: {
@@ -57,6 +65,7 @@ api.interceptors.response.use(
             accessToken: newAccessToken,
             refreshToken: currentState.refreshToken!,
             user: currentState.user!,
+            sessionExpiresAt: currentState.sessionExpiresAt,
           })
         );
 
@@ -66,7 +75,9 @@ api.interceptors.response.use(
       } catch {
         // ✅ Only redirect if user was previously logged in
         store.dispatch(clearCredentials());
-        window.location.href = "/";
+        if (window.location.pathname !== "/") {
+          window.location.href = "/";
+        }
         return Promise.reject(error);
       }
     }

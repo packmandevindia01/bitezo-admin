@@ -5,8 +5,8 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 export interface AuthUser {
   userId: number;
   userName: string;
-  email: string;
-  isMaster: boolean;
+  email?: string;
+  isMaster?: boolean;
 }
 
 interface AuthState {

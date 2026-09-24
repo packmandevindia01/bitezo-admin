@@ -3,9 +3,10 @@ import { FormInput, Button } from "../../../components/common";
 
 interface Props {
   onSubmit: (password: string) => void;
+  loading?: boolean;
 }
 
-const ResetPasswordForm = ({ onSubmit }: Props) => {
+const ResetPasswordForm = ({ onSubmit, loading = false }: Props) => {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
@@ -50,7 +51,7 @@ const ResetPasswordForm = ({ onSubmit }: Props) => {
         error={error}
       />
 
-      <Button onClick={handleSubmit} className="w-full">
+      <Button onClick={handleSubmit} className="w-full" loading={loading}>
         Reset Password
       </Button>
 

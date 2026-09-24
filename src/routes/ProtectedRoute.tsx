@@ -5,26 +5,19 @@ import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../store/store";
 import { clearCredentials } from "../store/authSlice";
 
-const isTokenExpired = (token: string): boolean => {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.exp * 1000 <= Date.now();
-  } catch {
-    return true;
-  }
-};
-
 const ProtectedRoute = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+  const { accessToken, refreshToken, sessionExpiresAt } = useSelector(
+    (state: RootState) => state.auth
+  );
 
-  // No token at all
-  if (!accessToken) {
+  // No credentials at all
+  if (!accessToken && !refreshToken) {
     return <Navigate to="/" replace />;
   }
 
-  // Token expired
-  if (isTokenExpired(accessToken)) {
+  // Session expired
+  if (sessionExpiresAt && new Date(sessionExpiresAt) <= new Date()) {
     dispatch(clearCredentials()); // ✅ clears Redux + localStorage
     return <Navigate to="/" replace />;
   }
