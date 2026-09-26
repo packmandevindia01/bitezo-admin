@@ -5,14 +5,21 @@ import App from './App.tsx'
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { ToastProvider } from './context/ToastContext.tsx'
+import { loadConfig } from "./config";
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Provider store={store}>
-      <ToastProvider>
-        <App />
-      </ToastProvider>
-    </Provider>
+const init = async () => {
+  // Load runtime configuration from public/config.json before rendering
+  await loadConfig();
 
-  </StrictMode>,
-)
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <Provider store={store}>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </Provider>
+    </StrictMode>,
+  );
+};
+
+init();

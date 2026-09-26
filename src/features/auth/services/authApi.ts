@@ -28,8 +28,9 @@ type OtpVerificationResponse =
   | string
   | {
       token?: string;
-      otpToken?: string;
-      data?: string | { token?: string; otpToken?: string };
+      // Backend returns otpToken as either a direct string OR a nested object: { data: "JWT", status: 200, ... }
+      otpToken?: string | { data?: string; token?: string; otpToken?: string; status?: number; message?: string; isSuccess?: boolean; [key: string]: unknown };
+      data?: string | { token?: string; otpToken?: string; data?: string };
       message?: string;
     };
 
@@ -48,20 +49,44 @@ export const sendOtpApi = async (email: string) => {
 };
 
 const extractOtpToken = (payload: OtpVerificationResponse): string => {
+  // Direct string
   if (typeof payload === "string") {
     return payload;
   }
 
-  if (typeof payload?.data === "string") {
+  // payload.otpToken is itself an object → backend wraps token inside it
+  // Actual shape: { otpToken: { data: "JWT_STRING", status: 200, ... } }
+  if (payload?.otpToken && typeof payload.otpToken === "object") {
+    const nested = payload.otpToken as Record<string, unknown>;
+    if (typeof nested.data === "string" && nested.data) return nested.data;
+    if (typeof nested.token === "string" && nested.token) return nested.token;
+    if (typeof nested.otpToken === "string" && nested.otpToken) return nested.otpToken;
+  }
+
+  // payload.otpToken is directly a string
+  if (typeof payload?.otpToken === "string" && payload.otpToken) {
+    return payload.otpToken;
+  }
+
+  // payload.token is directly a string
+  if (typeof payload?.token === "string" && payload.token) {
+    return payload.token;
+  }
+
+  // payload.data is a string
+  if (typeof payload?.data === "string" && payload.data) {
     return payload.data;
   }
 
-  return (
-    payload?.otpToken ??
-    payload?.token ??
-    (typeof payload?.data === "object" ? payload.data?.otpToken ?? payload.data?.token : "") ??
-    ""
-  );
+  // payload.data is an object with token/otpToken
+  if (typeof payload?.data === "object" && payload.data) {
+    const d = payload.data as Record<string, unknown>;
+    if (typeof d.otpToken === "string" && d.otpToken) return d.otpToken;
+    if (typeof d.token === "string" && d.token) return d.token;
+    if (typeof d.data === "string" && d.data) return d.data;
+  }
+
+  return "";
 };
 
 export const verifyOtpApi = async (email: string, otp: string): Promise<string> => {

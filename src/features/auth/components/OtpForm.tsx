@@ -70,7 +70,7 @@ const OtpForm = ({
       )}
 
       {/* OTP BOXES */}
-      <OtpInput value={otp} onChange={setOtp} />
+      <OtpInput value={otp} onChange={setOtp} onComplete={handleSubmit} />
 
       {(error || errorMessage) && (
         <p className="text-red-500 text-sm text-center">{error || errorMessage}</p>

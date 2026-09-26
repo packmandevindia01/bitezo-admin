@@ -1,3 +1,17 @@
+export interface TerminalItem {
+  terminalId: number;
+  terminalName: string;
+  status: string;
+  activeDate?: string;
+}
+
+export interface BranchListItem {
+  branchId?: number;
+  branchDescription: string;
+  terminalCount: number;
+  terminals?: TerminalItem[];
+}
+
 export interface CustomerFormData {
   custName: string;
   custMob: string;
@@ -22,6 +36,7 @@ export interface CustomerFormData {
   dealerId: number;
   empId?: number;
   createdDate: string;
+  branchLists: BranchListItem[];
 }
 
 export interface Customer {
@@ -53,6 +68,7 @@ export interface Customer {
   employeeName?: string;
   createdDate?: string;
   modifiedDate?: string;
+  branchLists?: BranchListItem[];
 }
 
 export interface CustomerListParams {

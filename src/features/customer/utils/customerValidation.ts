@@ -1,11 +1,9 @@
 import type { CustomerFormData } from "../types";
 import {
   isRequired,
-  isValidMobile,
   isNumber,
   isValidEmail,
 } from "../../../utils/validators";
-import { mapCountry } from "../../../utils/countryMapper"; // 👈 add this
 
 export const validateCustomer = (form: CustomerFormData) => {
   const errors: Partial<Record<keyof CustomerFormData, string>> = {};
@@ -16,20 +14,14 @@ export const validateCustomer = (form: CustomerFormData) => {
 
   if (!isRequired(form.custMob)) {
     errors.custMob = "Mobile number is required";
-  } else if (
-    form.custMob.trim() !== "-" &&
-    !isValidMobile(form.custMob, mapCountry(form.country)) // 👈 convert here
-  ) {
-    errors.custMob = "Invalid mobile number";
   }
 
-  // rest stays exactly the same...
   if (!isRequired(form.country)) {
     errors.country = "Country is required";
   }
 
-  if (!form.branchCount || !isNumber(form.branchCount.toString())) {
-    errors.branchCount = "Branch count must be a number";
+  if (!form.branchCount || !isNumber(form.branchCount.toString()) || form.branchCount < 1) {
+    errors.branchCount = "Branch count must be at least 1";
   }
 
   if (!isRequired(form.database)) {
@@ -50,12 +42,38 @@ export const validateCustomer = (form: CustomerFormData) => {
     errors.email = "Invalid email";
   }
 
-  if (!isRequired(form.conMode)) {
-    errors.conMode = "Connection mode is required";
-  }
-
   if (!form.dealerId) {
     errors.dealerId = "Dealer is required";
+  }
+
+  if (!form.empId) {
+    errors.empId = "Employee is required";
+  }
+
+  if (form.branchCount > 0) {
+    if (!form.branchLists || form.branchLists.length !== form.branchCount) {
+      errors.branchCount = `Please configure details for all ${form.branchCount} branches`;
+    } else {
+      const descriptions = new Set<string>();
+      for (let i = 0; i < form.branchLists.length; i++) {
+        const branch = form.branchLists[i];
+        const desc = (branch?.branchDescription ?? "").trim();
+        if (!desc) {
+          errors.branchCount = `Branch ${i + 1} description is required`;
+          break;
+        }
+        if (descriptions.has(desc.toLowerCase())) {
+          errors.branchCount = `Branch description "${desc}" must be unique across all branches`;
+          break;
+        }
+        descriptions.add(desc.toLowerCase());
+
+        if (branch.terminalCount === undefined || branch.terminalCount < 0 || isNaN(branch.terminalCount)) {
+          errors.branchCount = `Branch ${i + 1} terminal count must be a non-negative number`;
+          break;
+        }
+      }
+    }
   }
 
   return errors;
