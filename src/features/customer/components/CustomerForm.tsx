@@ -1633,7 +1633,10 @@ const CustomerForm = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <StatusBadge status={term.status} />
+                    <StatusBadge
+                      status={String(term.status).toLowerCase() === "active" ? "active" : "inactive"}
+                      label={String(term.status).toLowerCase() === "active" ? "Active" : "Inactive"}
+                    />
                     {isEdit && (
                       <button
                         type="button"

@@ -3,6 +3,7 @@ import {
   isRequired,
   isNumber,
   isValidEmail,
+  isValidMobile,
 } from "../../../utils/validators";
 
 export const validateCustomer = (form: CustomerFormData) => {
@@ -14,6 +15,8 @@ export const validateCustomer = (form: CustomerFormData) => {
 
   if (!isRequired(form.custMob)) {
     errors.custMob = "Mobile number is required";
+  } else if (!isValidMobile(form.custMob)) {
+    errors.custMob = "Invalid mobile number (maximum 15 digits)";
   }
 
   if (!isRequired(form.country)) {

@@ -17,7 +17,7 @@ import {
 
 import SidebarItem from "./SidebarItem";
 import SidebarDropdown from "./SidebarDropdown";
-import logo from "../../assets/logo.png";
+import bitezoLogo from "../../assets/bitezo-logo-hq-original.png";
 
 interface Props {
   isOpen: boolean;
@@ -81,20 +81,20 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
         </div>
 
         {/* LOGO + BRAND */}
-        <div className="flex flex-col items-center justify-center gap-2 pt-4 pb-4 md:pt-8 md:pb-6 px-4">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-linear-to-br from-[#49293e]/20 to-[#49293e]/5 scale-110" />
+        <div className="flex flex-col items-center justify-center pt-5 pb-4 px-4">
+          <div
+            onClick={() => {
+              navigate("/dashboard");
+              onClose();
+            }}
+            className="cursor-pointer flex flex-col items-center group transition-transform duration-200 hover:scale-[1.02]"
+          >
             <img
-              src={logo}
-              alt="Bitezo Logo"
-              className="relative h-12 w-12 md:h-20 md:w-20 rounded-full object-cover shadow-lg ring-2 ring-[#49293e]/20"
+              src={bitezoLogo}
+              alt="Bitezo"
+              className="h-8 md:h-10 w-auto max-w-[160px] object-contain"
             />
-          </div>
-          <div className="text-center">
-            <span className="font-bold text-lg md:text-xl text-[#49293e] tracking-wide block">
-              Bitezo
-            </span>
-            <span className="text-[10px] text-gray-400 uppercase tracking-widest font-medium hidden md:block">
+            <span className="mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold tracking-widest uppercase bg-[#49293e]/10 text-[#49293e] border border-[#49293e]/20">
               Admin Panel
             </span>
           </div>

@@ -1,174 +1,53 @@
-import { useState, useEffect } from "react";
-import { useToast } from "../../../context/ToastContext";
+import { useEffect } from "react";
+import { UserCog, UserPlus, X } from "lucide-react";
 import { Button, Modal, FilterPanel, PageIntro } from "../../../components/common";
-import { COUNTRY_FILTER_OPTIONS } from "../../../constants/formOptions";
 import EmployeeTable from "../components/EmployeeTable";
 import EmployeeForm from "../components/EmployeeForm";
-import {
-  getEmployees,
-  createEmployee,
-  updateEmployee,
-  deleteEmployee,
-  getEmployeeById,
-} from "../services/employeeApi";
-import type { Employee, EmployeeFormData } from "../types";
-import { getDealerListName } from "../../dealer/services/dealerApi";
-import { getCountryList } from "../../customer/services/customerApi";
-import type { SelectOption } from "../../../constants/formOptions";
-
-const initialFilters = {
-  empName: "",
-  dealerId: "All",
-  country: "All",
-};
+import { useEmployeeManager } from "../hooks/useEmployeeManager";
 
 const inputClass =
   "w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#49293e]/20 focus:border-[#49293e]/40 transition placeholder:text-gray-300 disabled:bg-gray-50 disabled:text-gray-400";
 
 const labelClass = "block text-xs font-medium text-gray-500 mb-1";
 
-const EmployeeList = () => {
-  const { showToast } = useToast();
+const EmployeeListPage = () => {
+  const {
+    employees,
+    loading,
+    deleting,
+    filters,
+    dealerOptions,
+    dealerFilterOptions,
+    countryFilterOptions,
+    createOpen,
+    editOpen,
+    editEmployee,
+    deleteId,
+    setFilters,
+    handleResetFilters,
+    setCreateOpen,
+    setDeleteId,
+    closeModals,
+    handleCreate,
+    handleEdit,
+    handleUpdate,
+    handleDelete,
+  } = useEmployeeManager();
 
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editEmployee, setEditEmployee] = useState<Employee | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [dealerOptions, setDealerOptions] = useState<SelectOption[]>([]);
-  const [dealerFilterOptions, setDealerFilterOptions] = useState<SelectOption[]>([
-    { label: "All", value: "All" },
-  ]);
-  const [countryFilterOptions, setCountryFilterOptions] = useState(COUNTRY_FILTER_OPTIONS);
-  const [countryMap, setCountryMap] = useState<Record<string, number>>({});
-  const [filters, setFilters] = useState(initialFilters);
-
+  // Close modals on Escape key
   useEffect(() => {
-    const loadCountries = async () => {
-      try {
-        const list = await getCountryList();
-        if (list && list.length > 0) {
-          const map: Record<string, number> = {};
-          const opts = [
-            { label: "All", value: "All" },
-            ...list.map((c) => {
-              map[c.countryName.toLowerCase()] = c.countryId;
-              return { label: c.countryName, value: c.countryName };
-            }),
-          ];
-          setCountryMap(map);
-          setCountryFilterOptions(opts);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (createOpen || editOpen) {
+          closeModals();
+        } else if (deleteId !== null) {
+          setDeleteId(null);
         }
-      } catch {
-        // keep default
       }
     };
-    loadCountries();
-  }, []);
-
-  const fetchEmployees = async (params: typeof initialFilters) => {
-    setLoading(true);
-    try {
-      const cid =
-        params.country && params.country !== "All"
-          ? countryMap[params.country.toLowerCase()]
-          : undefined;
-
-      const data = await getEmployees({
-        empName: params.empName?.trim() || undefined,
-        dealerId: params.dealerId !== "All" ? Number(params.dealerId) : undefined,
-        countryId: cid,
-      });
-      setEmployees(data);
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || "Failed to load", "error");
-      setEmployees([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      fetchEmployees(filters);
-    }, 400);
-    return () => window.clearTimeout(timeout);
-  }, [filters.empName, filters.dealerId, filters.country, countryMap]);
-
-  useEffect(() => {
-    const fetchDealers = async () => {
-      try {
-        const dealers = await getDealerListName();
-        setDealerOptions(
-          dealers.map((dealer) => ({
-            label: dealer.dealerName,
-            value: String(dealer.dealerId),
-          }))
-        );
-        setDealerFilterOptions([
-          { label: "All", value: "All" },
-          ...dealers.map((dealer) => ({
-            label: dealer.dealerName,
-            value: String(dealer.dealerId),
-          })),
-        ]);
-      } catch {
-        setDealerOptions([]);
-        setDealerFilterOptions([{ label: "All", value: "All" }]);
-      }
-    };
-
-    fetchDealers();
-  }, []);
-
-  const handleCreate = async (data: EmployeeFormData) => {
-    try {
-      await createEmployee(data);
-      showToast("Employee created successfully", "success");
-      setCreateOpen(false);
-      fetchEmployees(filters);
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || "Failed to create", "error");
-    }
-  };
-
-  const handleEdit = async (id: number) => {
-    try {
-      const employee = await getEmployeeById(id);
-      setEditEmployee(employee);
-      setEditOpen(true);
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || "Failed to fetch employee", "error");
-    }
-  };
-
-  const handleUpdate = async (data: EmployeeFormData) => {
-    if (!editEmployee) return;
-    try {
-      await updateEmployee(editEmployee.empId, data);
-      showToast("Employee updated successfully", "success");
-      setEditOpen(false);
-      setEditEmployee(null);
-      fetchEmployees(filters);
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || "Failed to update", "error");
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    try {
-      await deleteEmployee(deleteId);
-      showToast("Employee deleted successfully", "success");
-      setDeleteId(null);
-      setEditOpen(false);
-      setEditEmployee(null);
-      fetchEmployees(filters);
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || "Failed to delete", "error");
-    }
-  };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [createOpen, editOpen, deleteId, closeModals, setDeleteId]);
 
   return (
     <div className="space-y-6">
@@ -177,12 +56,8 @@ const EmployeeList = () => {
         description="Manage your staff and team members across all dealerships"
       />
 
-      <FilterPanel
-        onReset={() => {
-          setFilters(initialFilters);
-          fetchEmployees(initialFilters);
-        }}
-      >
+      {/* Filter Bar */}
+      <FilterPanel onReset={handleResetFilters}>
         <div>
           <label className={labelClass}>Search</label>
           <input
@@ -231,42 +106,70 @@ const EmployeeList = () => {
         </div>
       </FilterPanel>
 
+      {/* Employee Data Table */}
       <EmployeeTable
         employees={employees}
         loading={loading}
         onAdd={() => setCreateOpen(true)}
-        onEdit={(emp) => handleEdit(emp.empId)}
+        onEdit={handleEdit}
         onDelete={(id) => setDeleteId(id)}
       />
 
-      <Modal
-        isOpen={createOpen}
-        onClose={() => setCreateOpen(false)}
-        title="Create Employee"
-      >
-        <EmployeeForm
-          onSubmit={handleCreate}
-          dealerOptions={dealerOptions}
-        />
-      </Modal>
+      {/* Fullscreen Backoffice Employee Dialog (Client-Bitezo style) */}
+      {(createOpen || editOpen) && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-6 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.15s_ease-in-out]"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="relative w-full max-w-4xl max-h-[92vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#49293e]/10 text-[#49293e] flex items-center justify-center shadow-sm">
+                  {editOpen ? <UserCog size={20} /> : <UserPlus size={20} />}
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 tracking-tight">
+                    {editOpen ? "Edit Employee" : "Create New Employee"}
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    {editOpen
+                      ? "Update employee profile, contact info, and dealership assignment"
+                      : "Add a new staff member and assign them to an authorized dealership"}
+                  </p>
+                </div>
+              </div>
 
-      <Modal
-        isOpen={editOpen}
-        onClose={() => {
-          setEditOpen(false);
-          setEditEmployee(null);
-        }}
-        title="Edit Employee"
-      >
-        <EmployeeForm
-          initialData={editEmployee}
-          onSubmit={handleUpdate}
-          dealerOptions={dealerOptions}
-          onDelete={() => editEmployee && setDeleteId(editEmployee.empId)}
-          isEdit
-        />
-      </Modal>
+              <button
+                type="button"
+                onClick={closeModals}
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                title="Close (Esc)"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
+            {/* Form Body with Scroll */}
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+              <EmployeeForm
+                initialData={editOpen ? editEmployee : null}
+                onSubmit={editOpen ? handleUpdate : handleCreate}
+                dealerOptions={dealerOptions}
+                onDelete={editOpen && editEmployee ? () => setDeleteId(editEmployee.empId) : undefined}
+                onClose={closeModals}
+                isEdit={editOpen}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteId !== null}
         onClose={() => setDeleteId(null)}
@@ -277,10 +180,19 @@ const EmployeeList = () => {
             Are you sure you want to delete this employee? This action cannot be undone.
           </p>
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={() => setDeleteId(null)}>
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteId(null)}
+              disabled={deleting}
+            >
               Cancel
             </Button>
-            <Button variant="danger" onClick={handleDelete}>
+            <Button
+              variant="danger"
+              onClick={handleDelete}
+              loading={deleting}
+              disabled={deleting}
+            >
               Delete
             </Button>
           </div>
@@ -290,4 +202,4 @@ const EmployeeList = () => {
   );
 };
 
-export default EmployeeList;
+export default EmployeeListPage;

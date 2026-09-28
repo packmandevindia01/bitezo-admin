@@ -1,47 +1,12 @@
 // src/features/dashboard/pages/DashboardPage.tsx
-import { useEffect, useState } from "react";
 import { Users, UserCheck, UserX, TrendingUp } from "lucide-react";
-
 import StatCard from "../components/StatCard";
 import PurchaseChart from "../components/PurchaseChart";
 import SalesChart from "../components/SalesChart";
-import { fetchDashboardData } from "../services/dashboardApi";
-import type { DashboardData } from "../services/dashboardApi";
+import { useDashboardData } from "../hooks/useDashboardData";
 
-const DashboardPage = () => { 
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const result = await fetchDashboardData();
-        setData(result);
-      } catch (err: any) {
-        setError(err?.response?.data?.message ?? "Failed to load dashboard data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
-
-  // Sum of last_6_months counts = "recent activity" stat
-  const last6Total = data?.last_6_months?.reduce((acc, m) => acc + m.count, 0) ?? 0;
-
-  // Simple trend: compare last month vs month before
-  const computeTrend = (months?: DashboardData["last_6_months"]) => {
-    if (!months || months.length < 2) return undefined;
-    const last = months[months.length - 1].count;
-    const prev = months[months.length - 2].count;
-    if (prev === 0) return last > 0 ? 100 : 0;
-    return Math.round(((last - prev) / prev) * 100);
-  };
-
-  const trend = data?.last_6_months ? computeTrend(data.last_6_months) : undefined;
+const DashboardPage = () => {
+  const { data, loading, error, last6Total, trend, reload } = useDashboardData();
 
   if (error) {
     return (
@@ -50,7 +15,7 @@ const DashboardPage = () => {
           <p className="text-red-500 font-medium">{error}</p>
           <button
             className="text-sm text-indigo-600 underline"
-            onClick={() => window.location.reload()}
+            onClick={reload}
           >
             Retry
           </button>
@@ -61,7 +26,6 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
-
       {/* Page Header */}
       <div>
         <h1 className="text-xl font-bold text-gray-800">Dashboard</h1>
@@ -70,7 +34,6 @@ const DashboardPage = () => {
 
       {/* ── STAT CARDS ── */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-
         <StatCard
           title="Total Customers"
           value={loading ? "—" : (data?.customers ?? 0)}
@@ -107,19 +70,23 @@ const DashboardPage = () => {
           icon={<TrendingUp size={20} />}
           color="#10b981"
           bgColor="#ecfdf5"
-          subtitle="Customer acquisitions"
+          subtitle="Recent registrations"
           trend={trend}
           loading={loading}
         />
-
       </div>
 
       {/* ── CHARTS ── */}
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        <PurchaseChart data={data?.last_12_months ?? []} loading={loading} />
-        <SalesChart data={data?.last_12_months ?? []} loading={loading} />
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <SalesChart
+          data={data?.last_6_months ?? []}
+          loading={loading}
+        />
+        <PurchaseChart
+          data={data?.last_6_months ?? []}
+          loading={loading}
+        />
       </div>
-
     </div>
   );
 };

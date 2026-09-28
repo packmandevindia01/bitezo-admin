@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { FormInput, Button, SelectInput, Checkbox } from "../../../components/common";
-import { MOBILE_PLACEHOLDERS } from "../../../constants/formOptions";
-import { isRequired, isValidEmail } from "../../../utils/validators";
-import { mapCountry } from "../../../utils/countryMapper";
+import { isRequired, isValidEmail, isValidMobile, sanitizeMobileNumber } from "../../../utils/validators";
 import { getCountryList } from "../../customer/services/customerApi";
 import type { Dealer, DealerFormData } from "../types";
 import type { SelectOption } from "../../../constants/formOptions";
@@ -51,6 +49,7 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [countryList, setCountryList] = useState<CountryItem[]>([]);
   const [countryOptions, setCountryOptions] = useState<SelectOption[]>([]);
+  const formContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const loadCountries = async () => {
@@ -116,7 +115,18 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
     value: DealerFormData[keyof DealerFormData]
   ) => {
     if (submitting) return;
-    setForm((prev) => ({ ...prev, [key]: value }));
+    if (key === "name") {
+      const limited = String(value).slice(0, 20);
+      setForm((prev) => ({ ...prev, name: limited }));
+    } else if (key === "email") {
+      const limited = String(value).slice(0, 25);
+      setForm((prev) => ({ ...prev, email: limited }));
+    } else if (key === "mobNo") {
+      const sanitized = sanitizeMobileNumber(String(value));
+      setForm((prev) => ({ ...prev, mobNo: sanitized }));
+    } else {
+      setForm((prev) => ({ ...prev, [key]: value }));
+    }
     setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
@@ -128,14 +138,22 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
   const validate = () => {
     const newErrors: Partial<Record<keyof DealerFormData, string>> = {};
 
-    if (!isRequired(form.name)) newErrors.name = "Name is required";
+    if (!isRequired(form.name)) {
+      newErrors.name = "Name is required";
+    } else if (form.name.trim().length > 20) {
+      newErrors.name = "Name cannot exceed 20 characters";
+    }
 
     if (!isRequired(form.mobNo)) {
       newErrors.mobNo = "Mobile number is required";
+    } else if (!isValidMobile(form.mobNo)) {
+      newErrors.mobNo = "Invalid mobile number (maximum 15 digits)";
     }
 
     if (!isRequired(form.email)) {
       newErrors.email = "Email is required";
+    } else if (form.email.trim().length > 25) {
+      newErrors.email = "Email cannot exceed 25 characters";
     } else if (form.email.includes("@") && !isValidEmail(form.email)) {
       newErrors.email = "Invalid email";
     }
@@ -159,13 +177,44 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Enter") return;
+
+    const target = e.target as HTMLElement;
+    if (target.tagName === "BUTTON" || target.tagName === "TEXTAREA") return;
+
+    e.preventDefault();
+
+    const container = formContainerRef.current;
+    if (!container) return;
+
+    const focusable = Array.from(
+      container.querySelectorAll<HTMLElement>(
+        'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]), select:not([disabled])'
+      )
+    ).filter((el) => {
+      if (el.tabIndex === -1) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+
+    const currentIndex = focusable.indexOf(target);
+    if (currentIndex !== -1 && currentIndex + 1 < focusable.length) {
+      focusable[currentIndex + 1].focus();
+    } else {
+      handleSubmit();
+    }
+  };
+
   return (
-    <>
+    <div ref={formContainerRef} onKeyDown={handleKeyDown}>
       <div className="flex flex-col gap-4">
         <FormInput
+          id="dealer-name"
           label="Name"
           required
           autoFocus
+          maxLength={20}
           value={form.name}
           onChange={(e) => handleChange("name", e.target.value)}
           error={errors.name}
@@ -173,6 +222,7 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
         />
 
         <SelectInput
+          id="dealer-country"
           label="Country"
           required
           placeholder="Select Country"
@@ -193,13 +243,13 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
         />
 
         <FormInput
+          id="dealer-mobno"
           label="Mobile No"
           required
-          placeholder={
-            form.country
-              ? MOBILE_PLACEHOLDERS[mapCountry(form.country)] ?? "+91 9876543210"
-              : "Enter mobile number"
-          }
+          type="tel"
+          inputMode="tel"
+          maxLength={16}
+          placeholder="e.g. 9876543210 (max 15 digits)"
           value={form.mobNo}
           onChange={(e) => handleChange("mobNo", e.target.value)}
           error={errors.mobNo}
@@ -207,8 +257,11 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
         />
 
         <FormInput
+          id="dealer-email"
           label="Email"
           required
+          type="email"
+          maxLength={25}
           value={form.email}
           onChange={(e) => handleChange("email", e.target.value)}
           error={errors.email}
@@ -233,14 +286,14 @@ const DealerForm = ({ initialData, onSubmit, isEdit = false }: Props) => {
       </div>
 
       <div className="flex gap-3 mt-6 justify-center">
-        <Button variant="secondary" onClick={handleClear} disabled={submitting}>
+        <Button variant="secondary" onClick={handleClear} disabled={submitting} tabIndex={-1}>
           Clear
         </Button>
         <Button onClick={handleSubmit} disabled={submitting} loading={submitting}>
           {isEdit ? "Save" : "Create"}
         </Button>
       </div>
-    </>
+    </div>
   );
 };
 

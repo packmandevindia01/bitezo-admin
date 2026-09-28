@@ -27,23 +27,55 @@ const parseIsActive = (value: unknown): boolean => {
 const mapEmployee = (item: Record<string, unknown>): Employee => ({
   empId:
     (item.empId as number | undefined) ??
+    (item.EmpId as number | undefined) ??
+    (item.employeeId as number | undefined) ??
+    (item.EmployeeId as number | undefined) ??
     (item.id as number | undefined) ??
+    (item.Id as number | undefined) ??
     0,
-  name: (item.name as string | undefined) ?? "",
-  mobNo: (item.mobNo as string | undefined) ?? "",
-  email: (item.email as string | undefined) ?? "",
-  countryId: (item.countryId as number | undefined) ?? 0,
-  country: (item.country as string | undefined) ?? (item.countryName as string | undefined) ?? "",
+  name:
+    (item.name as string | undefined) ??
+    (item.Name as string | undefined) ??
+    (item.empName as string | undefined) ??
+    (item.EmpName as string | undefined) ??
+    "",
+  mobNo:
+    (item.mobNo as string | undefined) ??
+    (item.MobNo as string | undefined) ??
+    (item.mobile as string | undefined) ??
+    (item.Mobile as string | undefined) ??
+    "",
+  email:
+    (item.email as string | undefined) ??
+    (item.Email as string | undefined) ??
+    "",
+  countryId:
+    Number(item.countryId ?? item.CountryId ?? item.countryID ?? item.CountryID) || 0,
+  country:
+    (item.country as string | undefined) ??
+    (item.Country as string | undefined) ??
+    (item.countryName as string | undefined) ??
+    (item.CountryName as string | undefined) ??
+    "",
   dealerId:
-    (item.dealerId as number | undefined) ??
-    0,
+    Number(item.dealerId ?? item.DealerId ?? item.dealerID ?? item.DealerID) || 0,
   dealer:
     (item.dealer as string | undefined) ??
+    (item.Dealer as string | undefined) ??
     (item.dealerName as string | undefined) ??
+    (item.DealerName as string | undefined) ??
     undefined,
-  isActive: parseIsActive(item.isActive),
-  createdDate: (item.createdDate as string | undefined) ?? undefined,
-  modifiedDate: (item.modifiedDate as string | undefined) ?? undefined,
+  isActive: parseIsActive(
+    item.isActive !== undefined
+      ? item.isActive
+      : item.IsActive !== undefined
+        ? item.IsActive
+        : item.status !== undefined
+          ? item.status
+          : item.Status
+  ),
+  createdDate: (item.createdDate as string | undefined) ?? (item.CreatedDate as string | undefined) ?? undefined,
+  modifiedDate: (item.modifiedDate as string | undefined) ?? (item.ModifiedDate as string | undefined) ?? undefined,
 });
 
 // ── CREATE: POST /api/Employee ───────────────────────────────────────────────
@@ -118,8 +150,18 @@ export const getEmployees = async (
 export const getEmployeeById = async (empId: number): Promise<Employee> => {
   const response = await api.get("/api/Employee/" + empId);
   const body = response.data;
-  const item = (body?.data ?? body ?? {}) as Record<string, unknown>;
-  return mapEmployee(item);
+  const item = (
+    Array.isArray(body)
+      ? body[0]
+      : Array.isArray(body?.data)
+        ? body.data[0]
+        : (body?.data ?? body ?? {})
+  ) as Record<string, unknown>;
+  const mapped = mapEmployee(item);
+  if (!mapped.empId) {
+    mapped.empId = empId;
+  }
+  return mapped;
 };
 
 // ── UPDATE: PUT /api/Employee/{empId} ───────────────────────────────────────
@@ -127,8 +169,8 @@ export const updateEmployee = async (
   empId: number,
   data: EmployeeFormData
 ): Promise<EmployeeApiResponse> => {
-  const payload: UpdateEmployeePayload = {
-    empId,
+  const payload: UpdateEmployeePayload & { country?: string } = {
+    empId: Number(empId),
     name: data.name,
     mobNo: data.mobNo,
     email: data.email,
@@ -138,8 +180,21 @@ export const updateEmployee = async (
     modifiedDate: new Date().toISOString(),
   };
 
-  const response = await api.put("/api/Employee/" + empId, payload);
-  return response.data;
+  if (data.country) {
+    payload.country = data.country;
+  }
+
+  try {
+    const response = await api.put("/api/Employee/" + empId, payload);
+    return response.data;
+  } catch (err: any) {
+    // If PUT with ID in URL returned 404 or 405, fallback to PUT without ID in URL
+    if (err?.response?.status === 404 || err?.response?.status === 405) {
+      const fallbackResponse = await api.put("/api/Employee", payload);
+      return fallbackResponse.data;
+    }
+    throw err;
+  }
 };
 
 // ── GET LISTNAME BY DEALER: GET /api/Employee/listname/dealer ───────────────
@@ -160,11 +215,15 @@ export const getEmployeeListNameByDealer = async (
     return list.map((item: Record<string, unknown>) => ({
       empId:
         (item.empId as number | undefined) ??
+        (item.EmpId as number | undefined) ??
         (item.id as number | undefined) ??
+        (item.Id as number | undefined) ??
         0,
       name:
         (item.name as string | undefined) ??
+        (item.Name as string | undefined) ??
         (item.empName as string | undefined) ??
+        (item.EmpName as string | undefined) ??
         "",
     }));
   } catch {
@@ -176,6 +235,16 @@ export const getEmployeeListNameByDealer = async (
 export const deleteEmployee = async (
   empId: number
 ): Promise<EmployeeApiResponse> => {
-  const response = await api.delete("/api/Employee/" + empId);
-  return response.data;
+  try {
+    const response = await api.delete("/api/Employee/" + empId);
+    return response.data;
+  } catch (err: unknown) {
+    const maybe = err as { response?: { status?: number; data?: unknown }; message?: string };
+    if (maybe?.response?.status === 405) {
+      throw new Error(
+        `Backend Error (405 Method Not Allowed): Server does not have a DELETE endpoint for /api/Employee/${empId}. Backend team must add [HttpDelete("{empId}")].`
+      );
+    }
+    throw err;
+  }
 };

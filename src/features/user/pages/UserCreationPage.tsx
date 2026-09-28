@@ -25,8 +25,9 @@ const UserCreationPage = () => {
       await createUser(payload);
       showToast("User created successfully 🎉", "success");
       navigate("/dashboard/users");
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || "Failed to create ❌", "error");
+    } catch (err: unknown) {
+      const maybeErr = err as { response?: { data?: { message?: string } } };
+      showToast(maybeErr?.response?.data?.message || "Failed to create ❌", "error");
     } finally {
       setLoading(false);
     }

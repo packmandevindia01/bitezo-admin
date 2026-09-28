@@ -21,14 +21,17 @@ const DealerTable = ({ dealers, loading, onEdit, onAdd }: Props) => {
       header: "Status",
       accessor: "isActive",
       render: (row) => (
-        <StatusBadge status={row.isActive ? "active" : "inactive"} />
+        <StatusBadge
+          status={row.isActive ? "active" : "inactive"}
+          label={row.isActive ? "Active" : "Inactive"}
+        />
       ),
     },
     {
       header: "Actions",
       accessor: "dealerId",
       render: (row) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => onEdit(row)}
             title="Edit"

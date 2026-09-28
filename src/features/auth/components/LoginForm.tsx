@@ -6,6 +6,7 @@ import { useToast } from "../../../context/ToastContext";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../../../store/authSlice";
 import type { AppDispatch } from "../../../store/store";
+import { User, Lock } from "lucide-react";
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -95,46 +96,81 @@ const LoginForm = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-md bg-white p-6 sm:p-8 rounded-xl shadow-md mx-auto"
+      className="mx-auto w-full rounded-2xl bg-white p-8 sm:p-10 shadow-xl border border-gray-100/80"
     >
-      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center text-[#49293e]">
-        Login
+      <h2 className="text-center text-2xl sm:text-3xl font-extrabold text-[#49293e] tracking-tight">
+        Admin Login
       </h2>
-
-      <FormInput
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => {
-          setUsername(e.target.value);
-          setErrors((prev) => ({ ...prev, username: "" }));
-        }}
-        error={errors.username}
-      />
-
-      <FormInput
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => {
-          setPassword(e.target.value);
-          setErrors((prev) => ({ ...prev, password: "" }));
-        }}
-        error={errors.password}
-      />
-
-      <p
-        onClick={() => navigate("/forgot-password")}
-        className="text-sm text-right mt-2 mb-4 text-gray-600 cursor-pointer hover:underline"
-      >
-        Forgot Password?
+      <p className="mt-1.5 mb-7 text-center text-xs sm:text-sm text-gray-500 font-medium">
+        Enter your credentials to access the admin portal
       </p>
 
-      <Button type="submit" size="lg" fullWidth disabled={loading}>
+      <div className="space-y-4">
+        <FormInput
+          id="login-username"
+          type="text"
+          label="Username"
+          placeholder="Enter your username"
+          icon={<User size={18} />}
+          inputClassName="!h-12 !text-base !rounded-xl font-medium focus:!border-[#49293e] !pl-11"
+          value={username}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            setErrors((prev) => ({ ...prev, username: "" }));
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              document.getElementById("login-password")?.focus();
+            }
+          }}
+          error={errors.username}
+          autoFocus
+          tabIndex={1}
+        />
+
+        <FormInput
+          id="login-password"
+          type="password"
+          label="Password"
+          placeholder="Enter your password"
+          icon={<Lock size={18} />}
+          inputClassName="!h-12 !text-base !rounded-xl font-medium focus:!border-[#49293e] !pl-11 !pr-11"
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setErrors((prev) => ({ ...prev, password: "" }));
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
+          error={errors.password}
+          tabIndex={2}
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={() => navigate("/forgot-password")}
+        tabIndex={-1}
+        className="mt-3 mb-6 block w-full text-right cursor-pointer text-sm font-semibold text-gray-500 hover:text-[#49293e] hover:underline bg-transparent border-none outline-none transition-colors"
+      >
+        Forgot Password?
+      </button>
+
+      <Button
+        type="submit"
+        size="lg"
+        fullWidth
+        disabled={loading}
+        tabIndex={3}
+        className="!h-12 !text-base font-bold !rounded-xl bg-[#49293e] hover:bg-[#49293e]/90 transition-all shadow-md active:scale-[0.99]"
+      >
         {loading ? "Logging in..." : "Login"}
       </Button>
-
-     
     </form>
   );
 };

@@ -16,6 +16,16 @@ export const createUser = async (
   return response.data;
 };
 
+const parseIsActive = (val: unknown): boolean => {
+  if (typeof val === "boolean") return val;
+  if (typeof val === "string") {
+    const lower = val.trim().toLowerCase();
+    return lower === "true" || lower === "active" || lower === "1";
+  }
+  if (typeof val === "number") return val === 1;
+  return false;
+};
+
 // ✅ GET ALL USERS
 export const getUsers = async (): Promise<User[]> => {
   const response = await api.get("/api/User/list");
@@ -30,7 +40,7 @@ export const getUsers = async (): Promise<User[]> => {
     id: item.userId,
     name: item.userName,
     email: item.email || "",
-    active: item.isActive ?? item.status === "Active",
+    active: parseIsActive(item.isActive !== undefined ? item.isActive : (item.active !== undefined ? item.active : item.status)),
     isMaster: Boolean(item.isMaster),
   }));
 };
@@ -43,7 +53,7 @@ export const getUserById = async (userId: number): Promise<User> => {
     id: item.userId ?? item.id ?? userId,
     name: item.userName ?? item.name ?? "",
     email: item.email || "",
-    active: item.isActive !== undefined ? Boolean(item.isActive) : Boolean(item.status === "Active"),
+    active: parseIsActive(item.isActive !== undefined ? item.isActive : (item.active !== undefined ? item.active : item.status)),
     isMaster: Boolean(item.isMaster),
   };
 };
@@ -65,5 +75,11 @@ export const changePassword = async (
     `/api/User/${userId}/update-password`,
     data
   );
+  if (response.data && typeof response.data === "object") {
+    const res = response.data as { success?: boolean; isSuccess?: boolean; message?: string };
+    if (res.success === false || res.isSuccess === false) {
+      throw new Error(res.message || "Current password is incorrect.");
+    }
+  }
   return response.data;
 };

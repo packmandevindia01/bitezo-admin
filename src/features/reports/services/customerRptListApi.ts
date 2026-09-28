@@ -89,20 +89,28 @@ export const getCustomerReport = async (
       regId: (item.regId as string | undefined) ?? "",
       database: (item.database as string | undefined) ?? "",
       conMode: (item.conMode as string | undefined) ?? "",
-      version:
-        (item.version as string | undefined) ??
-        (typeof item.isDemo === "boolean"
-          ? item.isDemo
-            ? "Demo"
-            : "Licenced"
-          : ((item.isDemo as string | undefined) ?? "")),
-      isDemo:
-        (item.version as string | undefined) ??
-        (typeof item.isDemo === "boolean"
-          ? item.isDemo
-            ? "Demo"
-            : "Licenced"
-          : ((item.isDemo as string | undefined) ?? "")),
+      version: (() => {
+        const raw = (item.version as string | undefined) ?? (item.isDemo as string | boolean | undefined);
+        if (typeof raw === "boolean") return raw ? "Demo" : "Licenced";
+        if (typeof raw === "string") {
+          const lower = raw.trim().toLowerCase();
+          if (lower === "demo") return "Demo";
+          if (lower === "licenced" || lower === "licensed") return "Licenced";
+          return raw;
+        }
+        return "";
+      })(),
+      isDemo: (() => {
+        const raw = (item.version as string | undefined) ?? (item.isDemo as string | boolean | undefined);
+        if (typeof raw === "boolean") return raw ? "Demo" : "Licenced";
+        if (typeof raw === "string") {
+          const lower = raw.trim().toLowerCase();
+          if (lower === "demo") return "Demo";
+          if (lower === "licenced" || lower === "licensed") return "Licenced";
+          return raw;
+        }
+        return "";
+      })(),
       dealerId: (item.dealerId as number | undefined) ?? 0,
       dealerName:
         (item.dealerName as string | undefined) ??

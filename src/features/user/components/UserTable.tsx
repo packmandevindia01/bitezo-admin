@@ -25,14 +25,17 @@ const UserTable = ({ users, onEdit, onDelete, onChangePassword, onAdd }: Props) 
       header: "Status",
       accessor: "active",
       render: (row) => (
-        <StatusBadge status={row.active ? "active" : "inactive"} />
+        <StatusBadge
+          status={row.active ? "active" : "inactive"}
+          label={row.active ? "Active" : "Inactive"}
+        />
       ),
     },
     {
       header: "Actions",
       accessor: "id",
       render: (row) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           {/* Edit */}
           <button
             onClick={() => onEdit(row)}

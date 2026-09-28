@@ -160,11 +160,15 @@ export const getDealerListName = async (): Promise<DealerNameOption[]> => {
     return list.map((item: Record<string, unknown>) => ({
       dealerId:
         (item.dealerId as number | undefined) ??
+        (item.DealerId as number | undefined) ??
         (item.id as number | undefined) ??
+        (item.Id as number | undefined) ??
         0,
       dealerName:
         (item.dealerName as string | undefined) ??
+        (item.DealerName as string | undefined) ??
         (item.name as string | undefined) ??
+        (item.Name as string | undefined) ??
         "",
     }));
   } catch (err: unknown) {
