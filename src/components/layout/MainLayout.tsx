@@ -4,48 +4,52 @@ import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
 const MainLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Sidebar open by default on desktop, closed on mobile (matching client-bitezo)
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
 
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+    setSidebarOpen((current) => !current);
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex min-h-screen bg-gray-50 overflow-hidden">
+      {/* SIDEBAR DRAWER */}
+      <div
+        className={`fixed inset-y-0 left-0 z-40 w-[280px] max-w-[85vw] transform transition-transform duration-300 md:w-64 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => {
+            if (window.innerWidth < 768) {
+              setSidebarOpen(false);
+            }
+          }}
+        />
+      </div>
 
-  {/* Sidebar */}
-  <div
-    className={`fixed md:static z-40 inset-y-0 left-0 transform 
-    ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-    md:translate-x-0 transition-transform duration-300`}
-  >
-    <Sidebar 
-  isOpen={sidebarOpen} 
-  onClose={() => setSidebarOpen(false)} 
-/>
-  </div>
+      {/* MOBILE BACKDROP OVERLAY */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-  {/* Overlay */}
-  {sidebarOpen && (
-    <div
-      className="fixed inset-0 bg-black/30 md:hidden"
-      onClick={() => setSidebarOpen(false)}
-    />
-  )}
+      {/* MAIN CONTENT AREA */}
+      <div
+        className={`flex min-w-0 flex-1 flex-col transition-all duration-300 ${
+          sidebarOpen ? "md:ml-64" : "ml-0"
+        }`}
+      >
+        <Topbar toggleSidebar={toggleSidebar} />
 
-  {/* RIGHT SIDE */}
-  <div className="flex flex-col flex-1 min-w-0">
-
-    {/* ✅ FIX: REMOVE background from parent */}
-    <Topbar toggleSidebar={toggleSidebar} />
-
-    {/* ✅ Apply background ONLY here */}
-    <main className="flex-1 p-4 md:p-6 bg-gray-50 overflow-y-auto">
-      <Outlet />
-    </main>
-
-  </div>
-</div>
+        <main className="flex-1 overflow-x-hidden p-4 md:p-6">
+          <Outlet />
+        </main>
+      </div>
+    </div>
   );
 };
 

@@ -5,34 +5,29 @@ interface Props {
   label: string;
   active?: boolean;
   onClick?: () => void;
+  className?: string;
 }
 
-const SidebarItem = ({ icon, label, active, onClick }: Props) => {
+const SidebarItem = ({ icon, label, active, onClick, className = "" }: Props) => {
   return (
     <div
       onClick={onClick}
       className={`
-        flex items-center gap-2 md:gap-3
-        px-4 py-2 md:py-3
-        text-sm md:text-base
-        cursor-pointer transition-all
-
+        group flex items-center gap-2.5 px-3 py-2 mx-1 my-0.5 rounded-lg
+        text-sm font-medium cursor-pointer transition-all duration-150
+        hover:translate-x-0.5 active:scale-[0.98]
         ${
           active
-            ? "bg-[#f5f0f3] text-[#49293e] border-r-4 border-[#49293e] font-medium"
-            : "text-gray-700 hover:bg-gray-100"
+            ? "bg-[#49293e]/10 text-[#49293e] font-semibold"
+            : "text-gray-600 hover:bg-[#49293e]/8 hover:text-[#49293e]"
         }
+        ${className}
       `}
     >
-      {/* ICON */}
-      <span className="flex items-center text-base md:text-lg">
+      <span className={`shrink-0 transition-colors ${active ? "text-[#49293e]" : "text-gray-400 group-hover:text-[#49293e]"}`}>
         {icon}
       </span>
-
-      {/* LABEL */}
-      <span className="truncate">
-        {label}
-      </span>
+      <span className="truncate">{label}</span>
     </div>
   );
 };
