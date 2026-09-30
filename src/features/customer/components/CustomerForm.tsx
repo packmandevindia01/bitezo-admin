@@ -75,6 +75,8 @@ const initialState: CustomerFormData = {
   conMode: "",
   fileName: "",
   filePath: "",
+  idDocument: null,
+  isFileChanged: false,
   isDemo: true,
   dealerId: 0,
   empId: 0,
@@ -585,6 +587,8 @@ const CustomerForm = ({
         branchDescription: b.branchDescription.trim() || `Branch ${idx + 1}`,
         terminalCount: Number(b.terminalCount || 0),
       })),
+      idDocument: form.idDocument,
+      isFileChanged: Boolean(form.isFileChanged),
     };
   };
 
@@ -1229,6 +1233,8 @@ const CustomerForm = ({
                   if (!file) return;
                   handleChange("fileName", file.name);
                   handleChange("filePath", file.name);
+                  handleChange("idDocument", file);
+                  handleChange("isFileChanged", true);
                 }}
               />
               <Upload size={12} /> Browse

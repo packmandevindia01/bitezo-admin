@@ -65,37 +65,42 @@ export const createCustomer = async (
   data: CustomerFormData,
   otpToken?: string
 ) => {
-  const payload = {
-    custName: data.custName ?? '',
-    custMob: data.custMob ?? '',
-    custTel: data.custTel ?? '',
-    countryId: Number(data.countryId ?? 0),
-    block: data.block ?? '',
-    area: data.area ?? '',
-    road: data.road ?? '',
-    building: data.building ?? '',
-    flatNo: data.flatNo ?? '',
-    crNo: data.crNo ?? '',
-    email: data.email ?? '',
-    taxRegNo: data.taxRegNo ?? '',
-    branchCount: Number(data.branchCount ?? 0),
-    regId: data.regId ?? '',
-    database: data.database ?? '',
-    fileName: data.fileName ?? '',
-    filePath: data.filePath ?? '',
-    isDemo: Boolean(data.isDemo),
-    dealerId: Number(data.dealerId ?? 0),
-    empId: Number(data.empId ?? 0),
-    createdDate: data.createdDate ?? new Date().toISOString(),
-    branchLists: Array.isArray(data.branchLists)
-      ? data.branchLists.map((b: BranchListItem) => ({
-          branchDescription: b.branchDescription ?? '',
-          terminalCount: Number(b.terminalCount ?? 0),
-        }))
-      : [],
-  };
+  const formData = new FormData();
+  formData.append('CustName', data.custName ?? '');
+  formData.append('CustMob', data.custMob ?? '');
+  formData.append('CustTel', data.custTel ?? '');
+  formData.append('CountryId', String(Number(data.countryId ?? 0)));
+  formData.append('Block', data.block ?? '');
+  formData.append('Area', data.area ?? '');
+  formData.append('Road', data.road ?? '');
+  formData.append('Building', data.building ?? '');
+  formData.append('FlatNo', data.flatNo ?? '');
+  formData.append('CRNo', data.crNo ?? '');
+  formData.append('Email', data.email ?? '');
+  formData.append('TaxRegNo', data.taxRegNo ?? '');
+  formData.append('BranchCount', String(Number(data.branchCount ?? 0)));
+  formData.append('RegId', data.regId ?? '');
+  formData.append('Database', data.database ?? '');
+  formData.append('IsDemo', String(Boolean(data.isDemo)));
+  formData.append('DealerId', String(Number(data.dealerId ?? 0)));
+  formData.append('EmpId', String(Number(data.empId ?? 0)));
+  formData.append('CreatedDate', data.createdDate ?? new Date().toISOString());
 
-  const response = await api.post('/api/Customer', payload, {
+  const branchListArray = Array.isArray(data.branchLists)
+    ? data.branchLists.map((b: BranchListItem) => ({
+        branchDescription: b.branchDescription ?? '',
+        terminalCount: Number(b.terminalCount ?? 0),
+        BranchDescription: b.branchDescription ?? '',
+        TerminalCount: Number(b.terminalCount ?? 0),
+      }))
+    : [];
+  formData.append('BranchListJson', JSON.stringify(branchListArray));
+
+  if (data.idDocument instanceof File) {
+    formData.append('IdDocument', data.idDocument);
+  }
+
+  const response = await api.post('/api/Customer', formData, {
     headers: otpToken ? { 'Otp-Token': otpToken } : undefined,
   });
   return response.data;
@@ -140,38 +145,33 @@ export const updateCustomer = async (
   data: CustomerFormData & { custId: number },
   otpToken?: string
 ) => {
-  const payload = {
-    custId: Number(id || data.custId || 0),
-    custName: data.custName ?? '',
-    custMob: data.custMob ?? '',
-    custTel: data.custTel ?? '',
-    countryId: Number(data.countryId ?? 0),
-    block: data.block ?? '',
-    area: data.area ?? '',
-    road: data.road ?? '',
-    building: data.building ?? '',
-    flatNo: data.flatNo ?? '',
-    crNo: data.crNo ?? '',
-    email: data.email ?? '',
-    taxRegNo: data.taxRegNo ?? '',
-    branchCount: Number(data.branchCount ?? 0),
-    regId: data.regId ?? '',
-    database: data.database ?? '',
-    fileName: data.fileName ?? '',
-    filePath: data.filePath ?? '',
-    isDemo: Boolean(data.isDemo),
-    dealerId: Number(data.dealerId ?? 0),
-    empId: Number(data.empId ?? 0),
-    modifiedDate: new Date().toISOString(),
-    branchLists: Array.isArray(data.branchLists)
-      ? data.branchLists.map((b: BranchListItem) => ({
-          branchDescription: b.branchDescription ?? '',
-          terminalCount: Number(b.terminalCount ?? 0),
-        }))
-      : [],
-  };
+  const formData = new FormData();
+  formData.append('CustId', String(Number(id || data.custId || 0)));
+  formData.append('CustName', data.custName ?? '');
+  formData.append('CustMob', data.custMob ?? '');
+  formData.append('CustTel', data.custTel ?? '');
+  formData.append('CountryId', String(Number(data.countryId ?? 0)));
+  formData.append('Block', data.block ?? '');
+  formData.append('Area', data.area ?? '');
+  formData.append('Road', data.road ?? '');
+  formData.append('Building', data.building ?? '');
+  formData.append('FlatNo', data.flatNo ?? '');
+  formData.append('CRNo', data.crNo ?? '');
+  formData.append('Email', data.email ?? '');
+  formData.append('TaxRegNo', data.taxRegNo ?? '');
+  formData.append('RegId', data.regId ?? '');
+  formData.append('Database', data.database ?? '');
+  formData.append('IsFileChanged', String(Boolean(data.isFileChanged)));
+  formData.append('IsDemo', String(Boolean(data.isDemo)));
+  formData.append('DealerId', String(Number(data.dealerId ?? 0)));
+  formData.append('EmpId', String(Number(data.empId ?? 0)));
+  formData.append('ModifiedDate', new Date().toISOString());
 
-  const response = await api.put('/api/Customer/' + id, payload, {
+  if (data.idDocument instanceof File) {
+    formData.append('IdDocument', data.idDocument);
+  }
+
+  const response = await api.put('/api/Customer/' + id, formData, {
     headers: otpToken ? { 'Otp-Token': otpToken } : undefined,
   });
   return response.data;

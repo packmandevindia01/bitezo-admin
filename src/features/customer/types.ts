@@ -32,6 +32,8 @@ export interface CustomerFormData {
   conMode: string;
   fileName?: string;
   filePath?: string;
+  idDocument?: File | null;
+  isFileChanged?: boolean;
   isDemo: boolean;
   dealerId: number;
   empId?: number;
